@@ -79,6 +79,7 @@ main {
   font-variant-numeric: tabular-nums;
   font-size: 0.9rem;
   line-height: 1.5;
+  align-self: center;
 }
 
 .entry-source {
