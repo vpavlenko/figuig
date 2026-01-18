@@ -28,6 +28,9 @@ main {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  --dictionary-height: 200px;
+  --dictionary-bottom: 20px;
+  --dictionary-gap: 20px;
 }
 
 .mode-switch {
@@ -44,7 +47,9 @@ main {
 .sentences {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 280px;
+  padding-bottom: calc(
+    var(--dictionary-height) + var(--dictionary-bottom) + var(--dictionary-gap)
+  );
 }
 
 .sentences-columns {
@@ -95,12 +100,12 @@ main {
   position: fixed;
   left: 1.5rem;
   right: 1.5rem;
-  bottom: 20px;
+  bottom: var(--dictionary-bottom);
   border-top: 1px solid #27272a;
   padding-top: 1rem;
   padding-bottom: 0.5rem;
   background: #000;
-  max-height: 240px;
+  height: var(--dictionary-height);
   overflow: hidden;
 }
 
@@ -194,5 +199,11 @@ main {
 
   .dictionary-grid {
     grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+}
+
+@media (max-width: 1023px) {
+  .dictionary {
+    overflow-y: auto;
   }
 }
