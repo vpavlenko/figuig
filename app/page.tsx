@@ -2,14 +2,16 @@
 
 import { useMemo, useState } from "react";
 
-const EXAMPLE_GAP_PX = 10;
+const EXAMPLE_GAP_PX = 5;
 const SOURCE_ENGLISH_GAP_PX = 0;
-const COLOR_LIGHTNESS_DARK = "60%";
+const GROUP_GAP_PX = 28;
+const GROUP_TITLE_GAP_PX = 6;
+const COLOR_LIGHTNESS_DARK = "55%";
 const COLOR_LIGHTNESS_LIGHT = "70%";
 
 const VERB_SOURCES = new Set(["муд", "суфғ", "фр", "рз", "ситф"]);
 const PRONOUN_SOURCES = new Set(["шм", "х", "с", "и"]);
-const PARTICLE_SOURCES = new Set(["ала", "мани", "н", "д"]);
+const PARTICLE_SOURCES = new Set(["мани", "н", "ала", "д"]);
 const NOUN_SOURCES = new Set(["мтукл", "тажра", "учу"]);
 
 const DICTIONARY_GROUPS: Array<{
@@ -61,7 +63,7 @@ const DICTIONARY = [
   {
     source: "рз",
     english: "to break",
-    color: `hsl(135 85% ${COLOR_LIGHTNESS_DARK})`,
+    color: `hsl(140 85% ${COLOR_LIGHTNESS_DARK})`,
     englishForms: ["break", "broke", "broken", "breaking"],
   },
   {
@@ -73,7 +75,7 @@ const DICTIONARY = [
     source: "шм",
     english: "you (fem.)",
     color: `hsl(180 85% ${COLOR_LIGHTNESS_DARK})`,
-    englishForms: ["you"],
+    englishForms: ["youfem"],
   },
   { source: "х", english: "I", color: `hsl(203 85% ${COLOR_LIGHTNESS_LIGHT})` },
   {
@@ -82,25 +84,24 @@ const DICTIONARY = [
     color: `hsl(225 85% ${COLOR_LIGHTNESS_DARK})`,
     englishForms: ["him", "him/it", "himit"],
   },
-  { source: "и", english: "he", color: `hsl(248 85% ${COLOR_LIGHTNESS_LIGHT})` },
+  { source: "и", english: "he", color: `hsl(260 85% ${COLOR_LIGHTNESS_LIGHT})` },
   {
     source: "ала",
     english: "FUTURE_INTERROGATIVE",
     color: `hsl(270 85% ${COLOR_LIGHTNESS_DARK})`,
   },
+  { source: "д", english: "FUTURE_DECLARATIVE", color: `hsl(293 85% ${COLOR_LIGHTNESS_LIGHT})` },
   {
     source: "мани",
     english: "where",
-    color: `hsl(293 85% ${COLOR_LIGHTNESS_LIGHT})`,
+    color: `hsl(315 85% ${COLOR_LIGHTNESS_DARK})`,
     englishForms: ["where"],
   },
   {
     source: "н",
     english: "POSSESSIVE",
-    color: `hsl(315 85% ${COLOR_LIGHTNESS_DARK})`,
-    englishForms: ["my", "his"],
+    color: `hsl(338 85% ${COLOR_LIGHTNESS_LIGHT})`,
   },
-  { source: "д", english: "FUTURE_DECLARATIVE", color: `hsl(338 85% ${COLOR_LIGHTNESS_LIGHT})` },
 ];
 
 const SENTENCE_GROUP_COLUMNS: Array<{
@@ -110,7 +111,7 @@ const SENTENCE_GROUP_COLUMNS: Array<{
   {
     title: "No Object Pronoun",
     groups: [
-      { title: "Non-I subject", sentences: [1, 3, 16, 21, 4, 5, ] },
+      { title: "Non-I subject", sentences: [1, 16, 4, 5, 3, 21,] },
       { title: "'I' as subject", sentences: [2, 6] },
     ],
   },
@@ -124,7 +125,7 @@ const SENTENCE_GROUP_COLUMNS: Array<{
   {
     title: "Object Pronoun Before Verb",
     groups: [
-      { title: "Non-I subject", sentences: [8, 13, 9, 10, 14, 15, 22] },
+      { title: "Non-I subject", sentences: [8, 13, 10, 15, 9, 14, 22] },
       { title: "'I' as subject", sentences: [7] },
     ],
   },
@@ -143,9 +144,9 @@ export default function Home() {
     { id: 5, source: "мани ала и муд учу ?", translation: "Where will he prepare the couscous?" },
     { id: 6, source: "мани ала фр х тажра ?", translation: "Where shall I hide the dish?" },
     { id: 7, source: "с муд х", translation: "I will prepare him/it." },
-    { id: 8, source: "шм и фр", translation: "He will hide you (fem.)." },
-    { id: 9, source: "мани шм и фр ?", translation: "Where did he hide you (fem.)?" },
-    { id: 10, source: "мани шм ала и ситф ?", translation: "Where will he let you (fem.) in?" },
+    { id: 8, source: "шм и фр", translation: "He will hide you-fem." },
+    { id: 9, source: "мани шм и фр ?", translation: "Where did he hide you-fem.?" },
+    { id: 10, source: "мани шм ала и ситф ?", translation: "Where will he let you-fem. in?" },
     { id: 11, source: "и ситф и", translation: "He let him in." },
     { id: 12, source: "и муд и", translation: "He prepared him/it." },
     { id: 13, source: "с и суфғ", translation: "He will let him out." },
@@ -153,7 +154,7 @@ export default function Home() {
     { id: 15, source: "мани с ала и фр ?", translation: "Where will he hide him?" },
     { id: 16, source: "и ситф мтукл н с", translation: "He let his friend in." },
     { id: 17, source: "и рз и", translation: "He broke him/it." },
-    { id: 18, source: "фр х шм", translation: "I hid you (fem.)." },
+    { id: 18, source: "фр х шм", translation: "I hid you-fem." },
     { id: 19, source: "рз х с", translation: "I broke him/it." },
     { id: 20, source: "суфғ х с", translation: "I let (past) him out." },
     { id: 21, source: "д и рз тажра н х", translation: "" },
@@ -198,6 +199,9 @@ export default function Home() {
   function translationEntryForIndex(englishNormalizedTokens: string[], index: number) {
     const token = englishNormalizedTokens[index];
     if (!token) return null;
+
+    if (token === "my") return dictionaryIndex.bySource.get("х") ?? null;
+    if (token === "his") return dictionaryIndex.bySource.get("с") ?? null;
 
     if (token === "let" || token === "lets" || token === "letting") {
       return letSenseForIndex(englishNormalizedTokens, index);
@@ -327,6 +331,8 @@ export default function Home() {
         {
           ["--example-gap"]: `${EXAMPLE_GAP_PX}px`,
           ["--source-english-gap"]: `${SOURCE_ENGLISH_GAP_PX}px`,
+          ["--group-gap"]: `${GROUP_GAP_PX}px`,
+          ["--group-title-gap"]: `${GROUP_TITLE_GAP_PX}px`,
         } as React.CSSProperties
       }
     >
