@@ -111,7 +111,7 @@ const SENTENCE_GROUP_COLUMNS: Array<{
   {
     title: "No Object Pronoun",
     groups: [
-      { title: "Non-I subject", sentences: [1, 16, 4, 5, 3, 21,] },
+      { title: "Non-I subject", sentences: [1, 4, 5, 16, 3, 21,] },
       { title: "'I' as subject", sentences: [2, 6] },
     ],
   },
