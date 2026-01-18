@@ -14,9 +14,41 @@ const JOIN_MARGIN_PX = -3;
 const VERB_SOURCES = new Set(["муд", "суфғ", "фр", "рз", "ситф"]);
 const PRONOUN_SOURCES = new Set(["шм", "х", "с", "и"]);
 const PARTICLE_SOURCES = new Set(["мани", "ин", "ала", "ад"]);
-const NOUN_SOURCES = new Set(["мтукл", "тажра", "учу"]);
+const NOUN_SOURCES = new Set(["амтукл", "тажра", "учу"]);
 const CLITIC_I_SOURCE_KEY = "и=";
 const ENGLISH_KEY_HIM_OBJECT = "him_obj";
+
+const CYR_TO_LAT = {
+  а: "a",
+  д: "d",
+  ж: "ž",
+  з: "z",
+  и: "i",
+  к: "k",
+  л: "l",
+  м: "m",
+  н: "n",
+  р: "r",
+  с: "s",
+  т: "t",
+  у: "u",
+  ф: "f",
+  х: "x",
+  ч: "č",
+  ш: "š",
+  ғ: "ǧ",
+} as const satisfies Record<string, string>;
+
+function transliterateCyrillicToLatin(text: string) {
+  return Array.from(text)
+    .map((char) => {
+      const lower = char.toLowerCase();
+      const mapped = CYR_TO_LAT[lower as keyof typeof CYR_TO_LAT];
+      if (!mapped) return char;
+      return char === lower ? mapped : mapped.toUpperCase();
+    })
+    .join("");
+}
 
 const DICTIONARY_GROUPS: Array<{
   title: string;
@@ -30,7 +62,7 @@ const DICTIONARY_GROUPS: Array<{
 
 const DICTIONARY = [
   {
-    source: "мтукл",
+    source: "амтукл",
     english: "friend",
     color: `hsl(0 85% ${COLOR_LIGHTNESS_DARK})`,
     englishForms: ["friend"],
@@ -114,36 +146,37 @@ const SENTENCE_GROUP_COLUMNS: Array<{
   {
     title: "No Object Pronoun",
     groups: [
-      { title: "Non-I subject", sentences: [1, 4, 5, 16, 3, 21], solutionAppend: [25, 28] },
-      { title: "'I' as subject", sentences: [2, 6], solutionAppend: [23] },
+      { title: "S = 3sg", sentences: [1, 4, 5, 16, 3, 21], solutionAppend: [25, 28] },
+      { title: "S = 1sg", sentences: [2, 6], solutionAppend: [23] },
     ],
   },
   {
     title: "Object Pronoun After Verb",
     groups: [
-      { title: "Non-I subject", sentences: [11, 12, 17], solutionAppend: [26] },
-      { title: "'I' as subject", sentences: [18, 19, 20], solutionAppend: [27] },
+      { title: "S = 3sg", sentences: [11, 12, 17], solutionAppend: [26] },
+      { title: "S = 1sg", sentences: [18, 19, 20], solutionAppend: [27] },
     ],
   },
   {
     title: "Object Pronoun Before Verb",
     groups: [
-      { title: "Non-I subject", sentences: [8, 13, 10, 15, 9, 14, 22] },
-      { title: "'I' as subject", sentences: [7], solutionAppend: [24] },
+      { title: "S = 3sg", sentences: [8, 13, 10, 15, 9, 14, 22] },
+      { title: "S = 1sg", sentences: [7], solutionAppend: [24] },
     ],
   },
 ];
 
 export default function Home() {
   const [mode, setMode] = useState<"statement" | "solution">("statement");
+  const [script, setScript] = useState<"cyrillic" | "latin">("latin");
 
   const entries = [
-    { id: 1, source: "мтукл ин х и муд учу", translation: "My friend prepared the couscous." },
+    { id: 1, source: "амтукл ин х и муд учу", translation: "My friend prepared the couscous." },
     { id: 2, source: "муд х учу", translation: "I prepared the couscous." },
     { id: 3, source: "ад и муд учу", translation: "He will prepare the couscous." },
     {
       id: 4,
-      source: "мтукл ин х мани и муд учу ?",
+      source: "амтукл ин х мани и муд учу ?",
       translation: "Where did my friend prepare the couscous?",
     },
     { id: 5, source: "мани ала и муд учу ?", translation: "Where will he prepare the couscous?" },
@@ -157,7 +190,7 @@ export default function Home() {
     { id: 13, source: "с и суфғ", translation: "He will let him out." },
     { id: 14, source: "мани с и ситф ?", translation: "Where did he let him in?" },
     { id: 15, source: "мани с ала и фр ?", translation: "Where will he hide him?" },
-    { id: 16, source: "и ситф мтукл ин с", translation: "He let his friend in." },
+    { id: 16, source: "и ситф амтукл ин с", translation: "He let his friend in." },
     { id: 17, source: "и рз и", translation: "He broke him/it." },
     { id: 18, source: "фр х шм", translation: "I hid you-fem." },
     { id: 19, source: "рз х с", translation: "I broke him/it." },
@@ -169,8 +202,8 @@ export default function Home() {
     },
     {
       id: 22,
-      source: "мтукл ин х мани шм ала и фр ?",
-      translation: mode === "solution" ? "Where will my friend hide you-fem.?" : "",
+      source: "амтукл ин х мани шм ала и фр ?",
+      translation: mode === "solution" ? "Where will my friend hide you-fem?" : "",
     },
   ];
 
@@ -180,17 +213,17 @@ export default function Home() {
           {
             id: 23,
             translation: "Where shall I let his friend in?",
-            source: "мани ала ситф х мтукл ин с ?",
+            source: "мани ала ситф х амтукл ин с ?",
           },
           {
             id: 24,
-            translation: "Where shall I let you-fem. out?",
+            translation: "Where shall I let you-fem out?",
             source: "мани шм ала суфғ х ?",
           },
           {
             id: 25,
             translation: "My friend broke the dish.",
-            source: "мтукл ин х и рз тажра",
+            source: "амтукл ин х и рз тажра",
           },
           {
             id: 26,
@@ -205,7 +238,7 @@ export default function Home() {
           {
             id: 28,
             translation: "His friend will hide the couscous.",
-            source: "мтукл ин с ад и фр учу",
+            source: "амтукл ин с ад и фр учу",
           },
         ]
       : [];
@@ -388,6 +421,8 @@ export default function Home() {
       <div className="entry-source">
         {tokens.map((token, index) => {
           const tokenKey = sourceKeyAt(tokens, index);
+          const displayToken =
+            script === "latin" ? transliterateCyrillicToLatin(token) : token;
           const separator =
             index === 0
               ? ""
@@ -435,7 +470,7 @@ export default function Home() {
                 onMouseEnter={() => activateFromSourceToken(tokenKey)}
                 onMouseLeave={clearActive}
               >
-                {token}
+                {displayToken}
               </span>
             </span>
           );
@@ -517,6 +552,8 @@ export default function Home() {
   function renderDictionaryEntry(entry: (typeof DICTIONARY)[number]) {
     const isSourceActive = activeSource === entry.source;
     const isEnglishActive = isSourceActive;
+    const displaySource =
+      script === "latin" ? transliterateCyrillicToLatin(entry.source) : entry.source;
     return (
       <div key={entry.source} className="dictionary-item">
         <span
@@ -525,7 +562,7 @@ export default function Home() {
           onMouseEnter={() => setActive({ origin: "source", source: entry.source })}
           onMouseLeave={clearActive}
         >
-          {entry.source}
+          {displaySource}
         </span>
         <span className="dictionary-sep">-</span>
         <span
@@ -552,6 +589,66 @@ export default function Home() {
       }
     >
       <div className="mode-switch">
+        <div
+          role="tablist"
+          aria-label="Script"
+          style={{
+            display: "inline-flex",
+            padding: 2,
+            border: "1px solid rgb(102, 102, 102)",
+            borderRadius: 999,
+            background: "rgb(11, 11, 11)",
+            gap: 2,
+          }}
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={script === "latin"}
+            onClick={() => setScript("latin")}
+            style={{
+              border: "none",
+              borderRadius: 999,
+              padding: "6px 12px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              background: script === "latin" ? "rgb(229, 231, 235)" : "transparent",
+              color: script === "latin" ? "rgb(11, 11, 11)" : "rgb(203, 213, 225)",
+              transition: "background 120ms, color 120ms",
+              boxShadow:
+                script === "latin"
+                  ? "rgba(229, 231, 235, 0.25) 0px 0px 0px 1px"
+                  : undefined,
+            }}
+          >
+            Latin
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={script === "cyrillic"}
+            onClick={() => setScript("cyrillic")}
+            style={{
+              border: "none",
+              borderRadius: 999,
+              padding: "6px 12px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              background: script === "cyrillic" ? "rgb(229, 231, 235)" : "transparent",
+              color: script === "cyrillic" ? "rgb(11, 11, 11)" : "rgb(203, 213, 225)",
+              transition: "background 120ms, color 120ms",
+              boxShadow:
+                script === "cyrillic"
+                  ? "rgba(229, 231, 235, 0.25) 0px 0px 0px 1px"
+                  : undefined,
+            }}
+          >
+            Cyrillic
+          </button>
+        </div>
+
         <div
           role="tablist"
           aria-label="View mode"
