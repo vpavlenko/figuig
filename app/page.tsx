@@ -8,6 +8,19 @@ const COLOR_LIGHTNESS_DARK = "60%";
 const COLOR_LIGHTNESS_LIGHT = "70%";
 
 const VERB_SOURCES = new Set(["муд", "суфғ", "фр", "рз", "ситф"]);
+const PRONOUN_SOURCES = new Set(["шм", "х", "с", "и"]);
+const PARTICLE_SOURCES = new Set(["ала", "мани", "н", "д"]);
+const NOUN_SOURCES = new Set(["мтукл", "тажра", "учу"]);
+
+const DICTIONARY_GROUPS: Array<{
+  title: string;
+  sources: Set<string>;
+}> = [
+  { title: "Nouns", sources: NOUN_SOURCES },
+  { title: "Verbs", sources: VERB_SOURCES },
+  { title: "Pronouns", sources: PRONOUN_SOURCES },
+  { title: "Particles", sources: PARTICLE_SOURCES },
+];
 
 const DICTIONARY = [
   {
@@ -90,38 +103,31 @@ const DICTIONARY = [
   { source: "д", english: "FUTURE_DECLARATIVE", color: `hsl(338 85% ${COLOR_LIGHTNESS_LIGHT})` },
 ];
 
-const SENTENCE_GROUPS: Array<{ title: string; sentences: number[] }> = [
-
+const SENTENCE_GROUP_COLUMNS: Array<{
+  title: string;
+  groups: Array<{ title: string; sentences: number[] }>;
+}> = [
   {
-    title: "Non-I subject; no object pronoun",
-    sentences: [1, 3, 4, 5, 16, 21],
+    title: "No Object Pronoun",
+    groups: [
+      { title: "Non-I subject", sentences: [1, 3, 16, 21, 4, 5, ] },
+      { title: "'I' as subject", sentences: [2, 6] },
+    ],
   },
   {
-    title: "'I' as subject; no object pronoun",
-    sentences: [2, 6],
-  },
-
-
-  {
-    title: "Non-I subject; object pronoun after verb",
-    sentences: [11, 12, 17],
+    title: "Object Pronoun After Verb",
+    groups: [
+      { title: "Non-I subject", sentences: [11, 12, 17] },
+      { title: "'I' as subject", sentences: [18, 19, 20] },
+    ],
   },
   {
-    title: "'I' as subject; object pronoun after verb",
-    sentences: [18, 19, 20],
+    title: "Object Pronoun Before Verb",
+    groups: [
+      { title: "Non-I subject", sentences: [8, 13, 9, 10, 14, 15, 22] },
+      { title: "'I' as subject", sentences: [7] },
+    ],
   },
-  
-  {
-    title: "Non-I subject; object pronoun before verb",
-    sentences: [8, 9, 10, 13, 14, 15, 22],
-  },
-  {
-    title: "'I' as subject; object pronoun before verb",
-    sentences: [7],
-  },
-
-
-  
 ];
 
 export default function Home() {
@@ -289,6 +295,32 @@ export default function Home() {
     );
   }
 
+  function renderDictionaryEntry(entry: (typeof DICTIONARY)[number]) {
+    const isSourceActive = activeSource === entry.source;
+    const isEnglishActive = isSourceActive;
+    return (
+      <div key={entry.source} className="dictionary-item">
+        <span
+          className={`token dictionary-source${isSourceActive ? " is-highlighted" : ""}`}
+          style={{ color: entry.color }}
+          onMouseEnter={() => setActive({ source: entry.source })}
+          onMouseLeave={clearActive}
+        >
+          {entry.source}
+        </span>
+        <span className="dictionary-sep">-</span>
+        <span
+          className={`token dictionary-english${isEnglishActive ? " is-highlighted" : ""}`}
+          style={{ color: entry.color }}
+          onMouseEnter={() => setActive({ source: entry.source })}
+          onMouseLeave={clearActive}
+        >
+          {entry.english}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <main
       style={
@@ -299,66 +331,53 @@ export default function Home() {
       }
     >
       <div className="sentences">
-        {SENTENCE_GROUPS.map((group) => (
-          <section key={group.title} className="group">
-            <h3 className="group-title">{group.title}</h3>
-            <ol className="group-list">
-              {group.sentences.map((id) => {
-                const entry = entryById.get(id);
-                if (!entry) return null;
-                return (
-                  <li key={entry.id} className="sentence-item">
-                    <div className="entry-number">{entry.id}.</div>
-                    <div>
-                      {renderSource(entry.source)}
-                      {entry.translation ? renderTranslation(entry.translation) : null}
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          </section>
-        ))}
+        <div className="sentences-columns">
+          {SENTENCE_GROUP_COLUMNS.map((column) => (
+            <section key={column.title} className="sentences-column">
+              <h2 className="sentences-column-title">{column.title}</h2>
+              {column.groups.map((group) => (
+                <section key={group.title} className="group">
+                  <h3 className="group-title">{group.title}</h3>
+                  <ol className="group-list">
+                    {group.sentences.map((id) => {
+                      const entry = entryById.get(id);
+                      if (!entry) return null;
+                      return (
+                        <li key={entry.id} className="sentence-item">
+                          <div className="entry-number">{entry.id}.</div>
+                          <div>
+                            {renderSource(entry.source)}
+                            {entry.translation ? renderTranslation(entry.translation) : null}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </section>
+              ))}
+            </section>
+          ))}
+        </div>
       </div>
 
-      <aside className="dictionary">
+      <section className="dictionary">
         <h2 className="dictionary-title">Dictionary</h2>
-        <div className="dictionary-list">
-          {dictionary.map((entry) => {
-            const isSourceActive = activeSource === entry.source;
-            const isEnglishActive = isSourceActive;
+        <div className="dictionary-grid">
+          {DICTIONARY_GROUPS.map((group) => {
+            const entriesForGroup = dictionary.filter((entry) =>
+              group.sources.has(entry.source),
+            );
             return (
-              <div key={entry.source} className="dictionary-item">
-                <span
-                  className={`token dictionary-source${
-                    isSourceActive ? " is-highlighted" : ""
-                  }`}
-                  style={{ color: entry.color }}
-                  onMouseEnter={() =>
-                    setActive({ source: entry.source })
-                  }
-                  onMouseLeave={clearActive}
-                >
-                  {entry.source}
-                </span>
-                <span className="dictionary-english">-</span>
-                <span
-                  className={`token dictionary-english${
-                    isEnglishActive ? " is-highlighted" : ""
-                  }`}
-                  style={{ color: entry.color }}
-                  onMouseEnter={() =>
-                    setActive({ source: entry.source })
-                  }
-                  onMouseLeave={clearActive}
-                >
-                  {entry.english}
-                </span>
+              <div key={group.title} className="dictionary-column">
+                <h3 className="dictionary-column-title">{group.title}</h3>
+                <div className="dictionary-list">
+                  {entriesForGroup.map(renderDictionaryEntry)}
+                </div>
               </div>
             );
           })}
         </div>
-      </aside>
+      </section>
     </main>
   );
 }
