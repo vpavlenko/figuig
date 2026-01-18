@@ -14,7 +14,7 @@ const JOIN_MARGIN_PX = -3;
 const VERB_SOURCES = new Set(["муд", "суфғ", "фр", "рз", "ситф"]);
 const PRONOUN_SOURCES = new Set(["шм", "х", "с", "и"]);
 const PARTICLE_SOURCES = new Set(["мани", "ин", "ала", "ад"]);
-const NOUN_SOURCES = new Set(["амтукл", "тажра", "учу"]);
+const NOUN_SOURCES = new Set(["мтукл", "тажра", "учу"]);
 const CLITIC_I_SOURCE_KEY = "и=";
 const ENGLISH_KEY_HIM_OBJECT = "him_obj";
 
@@ -62,7 +62,7 @@ const DICTIONARY_GROUPS: Array<{
 
 const DICTIONARY = [
   {
-    source: "амтукл",
+    source: "мтукл",
     english: "friend",
     color: `hsl(0 85% ${COLOR_LIGHTNESS_DARK})`,
     englishForms: ["friend"],
@@ -171,12 +171,12 @@ export default function Home() {
   const [script, setScript] = useState<"cyrillic" | "latin">("latin");
 
   const entries = [
-    { id: 1, source: "амтукл ин х и муд учу", translation: "My friend prepared the couscous." },
+    { id: 1, source: "мтукл ин х и муд учу", translation: "My friend prepared the couscous." },
     { id: 2, source: "муд х учу", translation: "I prepared the couscous." },
     { id: 3, source: "ад и муд учу", translation: "He will prepare the couscous." },
     {
       id: 4,
-      source: "амтукл ин х мани и муд учу ?",
+      source: "мтукл ин х мани и муд учу ?",
       translation: "Where did my friend prepare the couscous?",
     },
     { id: 5, source: "мани ала и муд учу ?", translation: "Where will he prepare the couscous?" },
@@ -190,7 +190,7 @@ export default function Home() {
     { id: 13, source: "с и суфғ", translation: "He will let him out." },
     { id: 14, source: "мани с и ситф ?", translation: "Where did he let him in?" },
     { id: 15, source: "мани с ала и фр ?", translation: "Where will he hide him?" },
-    { id: 16, source: "и ситф амтукл ин с", translation: "He let his friend in." },
+    { id: 16, source: "и ситф мтукл ин с", translation: "He let his friend in." },
     { id: 17, source: "и рз и", translation: "He broke him/it." },
     { id: 18, source: "фр х шм", translation: "I hid you-fem." },
     { id: 19, source: "рз х с", translation: "I broke him/it." },
@@ -202,7 +202,7 @@ export default function Home() {
     },
     {
       id: 22,
-      source: "амтукл ин х мани шм ала и фр ?",
+      source: "мтукл ин х мани шм ала и фр ?",
       translation: mode === "solution" ? "Where will my friend hide you-fem?" : "",
     },
   ];
@@ -213,7 +213,7 @@ export default function Home() {
           {
             id: 23,
             translation: "Where shall I let his friend in?",
-            source: "мани ала ситф х амтукл ин с ?",
+            source: "мани ала ситф х мтукл ин с ?",
           },
           {
             id: 24,
@@ -223,7 +223,7 @@ export default function Home() {
           {
             id: 25,
             translation: "My friend broke the dish.",
-            source: "амтукл ин х и рз тажра",
+            source: "мтукл ин х и рз тажра",
           },
           {
             id: 26,
@@ -238,7 +238,7 @@ export default function Home() {
           {
             id: 28,
             translation: "His friend will hide the couscous.",
-            source: "амтукл ин с ад и фр учу",
+            source: "мтукл ин с ад и фр учу",
           },
         ]
       : [];

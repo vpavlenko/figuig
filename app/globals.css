@@ -7,6 +7,7 @@
 html,
 body {
   overflow-x: clip;
+  height: 100%;
 }
 
 body {
@@ -15,6 +16,7 @@ body {
   color: #f4f4f5;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
     "Apple Color Emoji", "Segoe UI Emoji";
+  height: 100vh;
 }
 
 main {
@@ -23,6 +25,9 @@ main {
   margin: 0;
   padding: 2.5rem 1.5rem;
   overflow-x: clip;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .mode-switch {
@@ -37,7 +42,9 @@ main {
 }
 
 .sentences {
-  margin-bottom: 2.5rem;
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 280px;
 }
 
 .sentences-columns {
@@ -85,8 +92,16 @@ main {
 }
 
 .dictionary {
+  position: fixed;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: 20px;
   border-top: 1px solid #27272a;
-  padding-top: 1.5rem;
+  padding-top: 1rem;
+  padding-bottom: 0.5rem;
+  background: #000;
+  max-height: 240px;
+  overflow: hidden;
 }
 
 .dictionary-title {
