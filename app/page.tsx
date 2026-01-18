@@ -69,15 +69,15 @@ const DICTIONARY = [
   {
     source: "ситф",
     english: "to let in",
-    color: `hsl(158 85% ${COLOR_LIGHTNESS_LIGHT})`,
+    color: `hsl(150 85% ${COLOR_LIGHTNESS_LIGHT})`,
   },
   {
     source: "шм",
     english: "you (fem.)",
-    color: `hsl(180 85% ${COLOR_LIGHTNESS_DARK})`,
+    color: `hsl(190 85% ${COLOR_LIGHTNESS_DARK})`,
     englishForms: ["youfem"],
   },
-  { source: "х", english: "I", color: `hsl(203 85% ${COLOR_LIGHTNESS_LIGHT})` },
+  { source: "х", english: "I", color: `hsl(210 85% ${COLOR_LIGHTNESS_LIGHT})` },
   {
     source: "с",
     english: "he/it",
