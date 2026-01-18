@@ -56,9 +56,19 @@ const DICTIONARY = [
     english: "to let in",
     color: `hsl(158 85% ${COLOR_LIGHTNESS_LIGHT})`,
   },
-  { source: "шм", english: "you (fem.)", color: `hsl(180 85% ${COLOR_LIGHTNESS_DARK})` },
+  {
+    source: "шм",
+    english: "you (fem.)",
+    color: `hsl(180 85% ${COLOR_LIGHTNESS_DARK})`,
+    englishForms: ["you"],
+  },
   { source: "х", english: "I", color: `hsl(203 85% ${COLOR_LIGHTNESS_LIGHT})` },
-  { source: "с", english: "he/it", color: `hsl(225 85% ${COLOR_LIGHTNESS_DARK})` },
+  {
+    source: "с",
+    english: "he/it",
+    color: `hsl(225 85% ${COLOR_LIGHTNESS_DARK})`,
+    englishForms: ["him", "him/it", "himit"],
+  },
   { source: "и", english: "he", color: `hsl(248 85% ${COLOR_LIGHTNESS_LIGHT})` },
   {
     source: "ала",
@@ -75,26 +85,34 @@ const DICTIONARY = [
     source: "н",
     english: "POSSESSIVE",
     color: `hsl(315 85% ${COLOR_LIGHTNESS_DARK})`,
+    englishForms: ["my", "his"],
   },
   { source: "д", english: "FUTURE_DECLARATIVE", color: `hsl(338 85% ${COLOR_LIGHTNESS_LIGHT})` },
 ];
 
 const SENTENCE_GROUPS: Array<{ title: string; sentences: number[] }> = [
   {
-    title: "I as subject; object after verb (or none)",
-    sentences: [2, 6, 18, 19, 20],
-  },
-
-  {
-    title: "Non-I subject; object after verb (or none)",
-    sentences: [1, 3, 4, 5, 11, 12, 16, 17, 21],
+    title: "'I' as subject; object pronoun after verb",
+    sentences: [18, 19, 20],
   },
   {
-    title: "I as subject; object before verb",
+    title: "'I' as subject; no object pronoun",
+    sentences: [2, 6],
+  },
+  {
+    title: "'I' as subject; object before verb",
     sentences: [7],
   },
   {
-    title: "Non-I subject; object before verb",
+    title: "Non-I subject; object pronoun after verb",
+    sentences: [11, 12, 17],
+  },
+  {
+    title: "Non-I subject; no object pronoun",
+    sentences: [1, 3, 4, 5, 16, 21],
+  },
+  {
+    title: "Non-I subject; object pronoun before verb",
     sentences: [8, 9, 10, 13, 14, 15, 22],
   },
 ];
@@ -232,14 +250,21 @@ export default function Home() {
 
   function renderTranslation(translation: string) {
     const tokens = translation.split(/\s+/).filter(Boolean);
-    const englishNormalizedTokens = tokens.map(normalizeEnglish);
+    const wordTokens = tokens.map((token) => {
+      const lastChar = token.slice(-1);
+      if (lastChar === "." || lastChar === "?" || lastChar === "!") {
+        return { word: token.slice(0, -1), punctuation: lastChar };
+      }
+      return { word: token, punctuation: "" };
+    });
+    const englishNormalizedTokens = wordTokens.map((token) => normalizeEnglish(token.word));
     return (
       <div className="entry-translation">
-        {tokens.map((token, index) => {
+        {wordTokens.map((token, index) => {
           const entry = translationEntryForIndex(englishNormalizedTokens, index);
           const isHighlighted = !!entry && !!activeSource && entry.source === activeSource;
           return (
-          <span key={`${token}-${index}`}>
+          <span key={`${token.word}${token.punctuation}-${index}`}>
             {index ? " " : ""}
             <span
               className={`token${isHighlighted ? " is-highlighted" : ""}`}
@@ -247,8 +272,9 @@ export default function Home() {
               onMouseEnter={() => (entry ? setActive({ source: entry.source }) : null)}
               onMouseLeave={clearActive}
             >
-              {token}
+              {token.word}
             </span>
+            {token.punctuation ? <span>{token.punctuation}</span> : null}
           </span>
         );
         })}
