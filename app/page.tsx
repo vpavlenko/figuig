@@ -4,12 +4,14 @@ import { useMemo, useState } from "react";
 
 const EXAMPLE_GAP_PX = 10;
 const SOURCE_ENGLISH_GAP_PX = 0;
-const COLOR_LIGHTNESS_DARK = "50%";
+const COLOR_LIGHTNESS_DARK = "60%";
 const COLOR_LIGHTNESS_LIGHT = "70%";
+
+const VERB_SOURCES = new Set(["муд", "суфғ", "фр", "рз", "ситф"]);
 
 const DICTIONARY = [
   {
-    source: "амтукл",
+    source: "мтукл",
     english: "friend",
     color: `hsl(0 85% ${COLOR_LIGHTNESS_DARK})`,
     englishForms: ["friend"],
@@ -60,7 +62,7 @@ const DICTIONARY = [
   { source: "и", english: "he", color: `hsl(248 85% ${COLOR_LIGHTNESS_LIGHT})` },
   {
     source: "ала",
-    english: "FUTURE QUESTION",
+    english: "FUTURE_INTERROGATIVE",
     color: `hsl(270 85% ${COLOR_LIGHTNESS_DARK})`,
   },
   {
@@ -74,17 +76,37 @@ const DICTIONARY = [
     english: "POSSESSIVE",
     color: `hsl(315 85% ${COLOR_LIGHTNESS_DARK})`,
   },
-  { source: "д", english: "FUTURE DECLARATIVE", color: `hsl(338 85% ${COLOR_LIGHTNESS_LIGHT})` },
+  { source: "д", english: "FUTURE_DECLARATIVE", color: `hsl(338 85% ${COLOR_LIGHTNESS_LIGHT})` },
+];
+
+const SENTENCE_GROUPS: Array<{ title: string; sentences: number[] }> = [
+  {
+    title: "I as subject; object after verb (or none)",
+    sentences: [2, 6, 18, 19, 20],
+  },
+
+  {
+    title: "Non-I subject; object after verb (or none)",
+    sentences: [1, 3, 4, 5, 11, 12, 16, 17, 21],
+  },
+  {
+    title: "I as subject; object before verb",
+    sentences: [7],
+  },
+  {
+    title: "Non-I subject; object before verb",
+    sentences: [8, 9, 10, 13, 14, 15, 22],
+  },
 ];
 
 export default function Home() {
   const entries = [
-    { id: 1, source: "амтукл н х и муд учу", translation: "My friend prepared the couscous." },
+    { id: 1, source: "мтукл н х и муд учу", translation: "My friend prepared the couscous." },
     { id: 2, source: "муд х учу", translation: "I prepared the couscous." },
     { id: 3, source: "д и муд учу", translation: "He will prepare the couscous." },
     {
       id: 4,
-      source: "амтукл н х мани и муд учу ?",
+      source: "мтукл н х мани и муд учу ?",
       translation: "Where did my friend prepare the couscous?",
     },
     { id: 5, source: "мани ала и муд учу ?", translation: "Where will he prepare the couscous?" },
@@ -98,16 +120,17 @@ export default function Home() {
     { id: 13, source: "с и суфғ", translation: "He will let him out." },
     { id: 14, source: "мани с и ситф ?", translation: "Where did he let him in?" },
     { id: 15, source: "мани с ала и фр ?", translation: "Where will he hide him?" },
-    { id: 16, source: "и ситф амтукл н с", translation: "He let his friend in." },
+    { id: 16, source: "и ситф мтукл н с", translation: "He let his friend in." },
     { id: 17, source: "и рз и", translation: "He broke him/it." },
     { id: 18, source: "фр х шм", translation: "I hid you (fem.)." },
     { id: 19, source: "рз х с", translation: "I broke him/it." },
     { id: 20, source: "суфғ х с", translation: "I let (past) him out." },
     { id: 21, source: "д и рз тажра н х", translation: "" },
-    { id: 22, source: "амтукл н х мани шм ала и фр ?", translation: "" },
+    { id: 22, source: "мтукл н х мани шм ала и фр ?", translation: "" },
   ];
 
   const dictionary = DICTIONARY;
+  const entryById = new Map(entries.map((entry) => [entry.id, entry] as const));
 
   function normalizeEnglish(token: string) {
     return token.toLowerCase().replace(/[^a-z]+/g, "");
@@ -175,11 +198,15 @@ export default function Home() {
               ? ""
               : token === "?"
                 ? ""
-              : token === "н" && index > 0 && index < tokens.length - 1
-                ? "-"
-                : tokens[index - 1] === "н" && index - 2 >= 0
-                  ? "-"
-                  : " ";
+                : token === "н" && index > 0 && index < tokens.length - 1
+                    ? "-"
+                    : tokens[index - 1] === "н" && index - 2 >= 0
+                      ? "-"
+                    : tokens[index - 1] === "и" && VERB_SOURCES.has(token)
+                        ? "="
+                        : token === "х" && VERB_SOURCES.has(tokens[index - 1] ?? "")
+                          ? "="
+                          : " ";
 
           return (
             <span key={`${token}-${index}`}>
@@ -239,17 +266,26 @@ export default function Home() {
       }
     >
       <div className="sentences">
-        <ol>
-          {entries.map((entry) => (
-            <li key={entry.id}>
-              <div className="entry-number">{entry.id}.</div>
-              <div>
-                {renderSource(entry.source)}
-                {entry.translation ? renderTranslation(entry.translation) : null}
-              </div>
-            </li>
-          ))}
-        </ol>
+        {SENTENCE_GROUPS.map((group) => (
+          <section key={group.title} className="group">
+            <h3 className="group-title">{group.title}</h3>
+            <ol className="group-list">
+              {group.sentences.map((id) => {
+                const entry = entryById.get(id);
+                if (!entry) return null;
+                return (
+                  <li key={entry.id} className="sentence-item">
+                    <div className="entry-number">{entry.id}.</div>
+                    <div>
+                      {renderSource(entry.source)}
+                      {entry.translation ? renderTranslation(entry.translation) : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        ))}
       </div>
 
       <aside className="dictionary">

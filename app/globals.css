@@ -14,23 +14,36 @@ main {
   gap: 2.5rem;
 }
 
-.sentences ol {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--example-gap, 1.25rem);
-}
-
-.sentences li {
-  display: flex;
-  gap: 1rem;
-}
-
 .sentences {
   flex: 1;
   min-width: 0;
+}
+
+.group {
+  break-inside: avoid;
+  margin-bottom: var(--example-gap, 1.25rem);
+}
+
+.group-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e4e4e7;
+}
+
+.group-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--example-gap, 1.25rem);
+}
+
+.sentence-item {
+  display: flex;
+  gap: 1rem;
+  break-inside: avoid;
 }
 
 .dictionary {
@@ -104,9 +117,8 @@ main {
 }
 
 @media (min-width: 1024px) {
-  .sentences ol {
-    grid-auto-flow: column;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: repeat(11, auto);
+  .sentences {
+    columns: 2;
+    column-gap: 2.5rem;
   }
 }
