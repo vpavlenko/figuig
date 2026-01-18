@@ -91,30 +91,37 @@ const DICTIONARY = [
 ];
 
 const SENTENCE_GROUPS: Array<{ title: string; sentences: number[] }> = [
-  {
-    title: "'I' as subject; object pronoun after verb",
-    sentences: [18, 19, 20],
-  },
-  {
-    title: "'I' as subject; no object pronoun",
-    sentences: [2, 6],
-  },
-  {
-    title: "'I' as subject; object before verb",
-    sentences: [7],
-  },
-  {
-    title: "Non-I subject; object pronoun after verb",
-    sentences: [11, 12, 17],
-  },
+
   {
     title: "Non-I subject; no object pronoun",
     sentences: [1, 3, 4, 5, 16, 21],
   },
   {
+    title: "'I' as subject; no object pronoun",
+    sentences: [2, 6],
+  },
+
+
+  {
+    title: "Non-I subject; object pronoun after verb",
+    sentences: [11, 12, 17],
+  },
+  {
+    title: "'I' as subject; object pronoun after verb",
+    sentences: [18, 19, 20],
+  },
+  
+  {
     title: "Non-I subject; object pronoun before verb",
     sentences: [8, 9, 10, 13, 14, 15, 22],
   },
+  {
+    title: "'I' as subject; object pronoun before verb",
+    sentences: [7],
+  },
+
+
+  
 ];
 
 export default function Home() {
