@@ -2,17 +2,21 @@
 
 import { useMemo, useState } from "react";
 
-const EXAMPLE_GAP_PX = 5;
+const EXAMPLE_GAP_PX = 0;
 const SOURCE_ENGLISH_GAP_PX = 0;
 const GROUP_GAP_PX = 28;
 const GROUP_TITLE_GAP_PX = 6;
 const COLOR_LIGHTNESS_DARK = "55%";
 const COLOR_LIGHTNESS_LIGHT = "70%";
+const JOIN_COLOR = "#888";
+const JOIN_MARGIN_PX = -3;
 
 const VERB_SOURCES = new Set(["муд", "суфғ", "фр", "рз", "ситф"]);
 const PRONOUN_SOURCES = new Set(["шм", "х", "с", "и"]);
 const PARTICLE_SOURCES = new Set(["мани", "ин", "ала", "ад"]);
 const NOUN_SOURCES = new Set(["мтукл", "тажра", "учу"]);
+const CLITIC_I_SOURCE_KEY = "и=";
+const ENGLISH_KEY_HIM_OBJECT = "him_obj";
 
 const DICTIONARY_GROUPS: Array<{
   title: string;
@@ -82,7 +86,6 @@ const DICTIONARY = [
     source: "с",
     english: "he/it",
     color: `hsl(225 85% ${COLOR_LIGHTNESS_DARK})`,
-    englishForms: ["him", "him/it", "himit"],
   },
   { source: "и", english: "he", color: `hsl(260 85% ${COLOR_LIGHTNESS_LIGHT})` },
   {
@@ -106,32 +109,34 @@ const DICTIONARY = [
 
 const SENTENCE_GROUP_COLUMNS: Array<{
   title: string;
-  groups: Array<{ title: string; sentences: number[] }>;
+  groups: Array<{ title: string; sentences: number[]; solutionAppend?: number[] }>;
 }> = [
   {
     title: "No Object Pronoun",
     groups: [
-      { title: "Non-I subject", sentences: [1, 4, 5, 16, 3, 21,] },
-      { title: "'I' as subject", sentences: [2, 6] },
+      { title: "Non-I subject", sentences: [1, 4, 5, 16, 3, 21], solutionAppend: [25, 28] },
+      { title: "'I' as subject", sentences: [2, 6], solutionAppend: [23] },
     ],
   },
   {
     title: "Object Pronoun After Verb",
     groups: [
-      { title: "Non-I subject", sentences: [11, 12, 17] },
-      { title: "'I' as subject", sentences: [18, 19, 20] },
+      { title: "Non-I subject", sentences: [11, 12, 17], solutionAppend: [26] },
+      { title: "'I' as subject", sentences: [18, 19, 20], solutionAppend: [27] },
     ],
   },
   {
     title: "Object Pronoun Before Verb",
     groups: [
       { title: "Non-I subject", sentences: [8, 13, 10, 15, 9, 14, 22] },
-      { title: "'I' as subject", sentences: [7] },
+      { title: "'I' as subject", sentences: [7], solutionAppend: [24] },
     ],
   },
 ];
 
 export default function Home() {
+  const [mode, setMode] = useState<"statement" | "solution">("statement");
+
   const entries = [
     { id: 1, source: "мтукл ин х и муд учу", translation: "My friend prepared the couscous." },
     { id: 2, source: "муд х учу", translation: "I prepared the couscous." },
@@ -157,15 +162,75 @@ export default function Home() {
     { id: 18, source: "фр х шм", translation: "I hid you-fem." },
     { id: 19, source: "рз х с", translation: "I broke him/it." },
     { id: 20, source: "суфғ х с", translation: "I let (past) him out." },
-    { id: 21, source: "ад и рз тажра ин х", translation: "" },
-    { id: 22, source: "мтукл ин х мани шм ала и фр ?", translation: "" },
+    {
+      id: 21,
+      source: "ад и рз тажра ин х",
+      translation: mode === "solution" ? "He will break my dish." : "",
+    },
+    {
+      id: 22,
+      source: "мтукл ин х мани шм ала и фр ?",
+      translation: mode === "solution" ? "Where will my friend hide you-fem.?" : "",
+    },
   ];
 
+  const solutionExamples =
+    mode === "solution"
+      ? [
+          {
+            id: 23,
+            translation: "Where shall I let his friend in?",
+            source: "мани ала ситф х мтукл ин с ?",
+          },
+          {
+            id: 24,
+            translation: "Where shall I let you-fem. out?",
+            source: "мани шм ала суфғ х ?",
+          },
+          {
+            id: 25,
+            translation: "My friend broke the dish.",
+            source: "мтукл ин х и рз тажра",
+          },
+          {
+            id: 26,
+            translation: "He hid him/it.",
+            source: "и фр и",
+          },
+          {
+            id: 27,
+            translation: "I prepared him/it.",
+            source: "муд х с",
+          },
+          {
+            id: 28,
+            translation: "His friend will hide the couscous.",
+            source: "мтукл ин с ад и фр учу",
+          },
+        ]
+      : [];
+
   const dictionary = DICTIONARY;
-  const entryById = new Map(entries.map((entry) => [entry.id, entry] as const));
+  const allEntries = [...entries, ...solutionExamples];
+  const entryById = new Map(allEntries.map((entry) => [entry.id, entry] as const));
 
   function normalizeEnglish(token: string) {
     return token.toLowerCase().replace(/[^a-z]+/g, "");
+  }
+
+  function canonicalEnglishKey(englishNormalizedToken: string) {
+    if (englishNormalizedToken === "him" || englishNormalizedToken === "himit") return ENGLISH_KEY_HIM_OBJECT;
+    return englishNormalizedToken;
+  }
+
+  function isCliticI(sourceTokens: string[], tokenIndex: number) {
+    return sourceTokens[tokenIndex] === "и" && VERB_SOURCES.has(sourceTokens[tokenIndex + 1] ?? "");
+  }
+
+  function sourceKeyAt(sourceTokens: string[], tokenIndex: number) {
+    const token = sourceTokens[tokenIndex];
+    if (token === "и" && isCliticI(sourceTokens, tokenIndex)) return CLITIC_I_SOURCE_KEY;
+    return token;
   }
 
   function parseTranslation(translation: string) {
@@ -178,27 +243,38 @@ export default function Home() {
       return { word: token, punctuation: "" };
     });
     const englishNormalizedTokens = wordTokens.map((token) => normalizeEnglish(token.word));
+    const englishKeys = englishNormalizedTokens.map(canonicalEnglishKey);
     const englishTokenSet = new Set<string>();
-    for (const t of englishNormalizedTokens) {
+    for (const t of englishKeys) {
       if (t) englishTokenSet.add(t);
     }
     for (const t of wordTokens) {
       if (t.punctuation) englishTokenSet.add(t.punctuation);
     }
-    return { wordTokens, englishNormalizedTokens, englishTokenSet };
+    return { wordTokens, englishNormalizedTokens, englishKeys, englishTokenSet };
   }
 
   const entryMetaById = useMemo(() => {
-    const meta = new Map<number, { sourceTokenSet: Set<string>; englishTokenSet: Set<string> }>();
-    for (const entry of entries) {
-      const sourceTokenSet = new Set(entry.source.split(/\s+/).filter(Boolean));
+    const meta = new Map<
+      number,
+      {
+        sourceTokens: string[];
+        sourceKeys: string[];
+        sourceKeySet: Set<string>;
+        englishTokenSet: Set<string>;
+      }
+    >();
+    for (const entry of allEntries) {
+      const sourceTokens = entry.source.split(/\s+/).filter(Boolean);
+      const sourceKeys = sourceTokens.map((_, index) => sourceKeyAt(sourceTokens, index));
+      const sourceKeySet = new Set(sourceKeys);
       const englishTokenSet = entry.translation
         ? parseTranslation(entry.translation).englishTokenSet
         : new Set<string>();
-      meta.set(entry.id, { sourceTokenSet, englishTokenSet });
+      meta.set(entry.id, { sourceTokens, sourceKeys, sourceKeySet, englishTokenSet });
     }
     return meta;
-  }, [entries]);
+  }, [allEntries]);
 
   const dictionaryIndex = useMemo(() => {
     const bySource = new Map<string, (typeof DICTIONARY)[number]>();
@@ -221,8 +297,8 @@ export default function Home() {
   const activeEnglishKey = active?.englishKey ?? null;
   const activeOrigin = active?.origin ?? null;
 
-  function activateFromSourceToken(rawToken: string) {
-    setActive({ origin: "source", source: rawToken });
+  function activateFromSourceToken(sourceKey: string) {
+    setActive({ origin: "source", source: sourceKey });
   }
 
   function letSenseForIndex(englishNormalizedTokens: string[], index: number) {
@@ -232,13 +308,40 @@ export default function Home() {
     return null;
   }
 
-  function translationEntryForIndex(englishNormalizedTokens: string[], index: number) {
+  function pickThirdPersonObjectSource(sourceTokens: string[]) {
+    const hasS = sourceTokens.includes("с");
+    const hasObjectI = sourceTokens.some((token, index) => token === "и" && !isCliticI(sourceTokens, index));
+    if (hasS && !hasObjectI) return "с";
+    if (!hasS && hasObjectI) return "и";
+    if (hasS && hasObjectI) return sourceTokens.indexOf("с") < sourceTokens.lastIndexOf("и") ? "с" : "и";
+    return null;
+  }
+
+  function translationEntryForIndex(
+    englishNormalizedTokens: string[],
+    index: number,
+    sourceTokens: string[],
+  ) {
     const token = englishNormalizedTokens[index];
     if (!token) return null;
 
     if (token === "my") return dictionaryIndex.bySource.get("х") ?? null;
     if (token === "his") return dictionaryIndex.bySource.get("с") ?? null;
-    if (token === "will" || token === "shall") return dictionaryIndex.bySource.get("ала") ?? null;
+    if (token === "he") {
+      const entry = dictionaryIndex.bySource.get("и");
+      if (!entry) return null;
+      if (!sourceTokens.some((t, i) => t === "и" && isCliticI(sourceTokens, i))) return null;
+      return { ...entry, source: CLITIC_I_SOURCE_KEY };
+    }
+    if (token === "will" || token === "shall") {
+      if (sourceTokens.includes("ала")) return dictionaryIndex.bySource.get("ала") ?? null;
+      if (sourceTokens.includes("ад")) return dictionaryIndex.bySource.get("ад") ?? null;
+      return dictionaryIndex.bySource.get("ала") ?? null;
+    }
+    if (token === "him" || token === "himit") {
+      const source = pickThirdPersonObjectSource(sourceTokens);
+      return source ? dictionaryIndex.bySource.get(source) ?? null : null;
+    }
 
     if (token === "let" || token === "lets" || token === "letting") {
       return letSenseForIndex(englishNormalizedTokens, index);
@@ -255,21 +358,36 @@ export default function Home() {
     setActive(null);
   }
 
-  function isSourceHighlighted(sentenceId: number, rawToken: string) {
+  function isSourceHighlighted(sentenceId: number, tokenKey: string, tokenIndex: number) {
     if (!activeSource) return false;
-    if (rawToken !== activeSource) return false;
+    if (tokenKey !== activeSource) return false;
     if (activeOrigin !== "english") return true;
     if (!activeEnglishKey) return false;
 
     const meta = entryMetaById.get(sentenceId);
-    return !!meta && meta.englishTokenSet.has(activeEnglishKey);
+    if (!meta || !meta.englishTokenSet.has(activeEnglishKey)) return false;
+
+    if (activeSource === "и") {
+      const lastStandaloneIIndex = meta.sourceTokens.reduce((lastIndex, token, index) => {
+        if (token === "и" && !isCliticI(meta.sourceTokens, index)) return index;
+        return lastIndex;
+      }, -1);
+      if (lastStandaloneIIndex !== -1) return tokenIndex === lastStandaloneIIndex;
+    }
+
+    return true;
   }
 
   function renderSource(sentenceId: number, source: string) {
     const tokens = source.split(/\s+/).filter(Boolean);
+    const lastStandaloneIIndex = tokens.reduce((lastIndex, token, index) => {
+      if (token === "и" && !isCliticI(tokens, index)) return index;
+      return lastIndex;
+    }, -1);
     return (
       <div className="entry-source">
         {tokens.map((token, index) => {
+          const tokenKey = sourceKeyAt(tokens, index);
           const separator =
             index === 0
               ? ""
@@ -280,22 +398,41 @@ export default function Home() {
                     : tokens[index - 1] === "ин" && index - 2 >= 0
                       ? "-"
                     : tokens[index - 1] === "и" && VERB_SOURCES.has(token)
-                        ? "="
+                        ? "~"
                         : token === "х" && VERB_SOURCES.has(tokens[index - 1] ?? "")
-                          ? "="
+                          ? "~"
                           : " ";
 
           return (
             <span key={`${token}-${index}`}>
-              {separator}
+              {separator === "-" || separator === "~" ? (
+                <span
+                  style={{
+                    color: JOIN_COLOR,
+                    display: "inline-block",
+                    marginLeft: JOIN_MARGIN_PX,
+                    marginRight: JOIN_MARGIN_PX,
+                  }}
+                >
+                  {separator}
+                </span>
+              ) : (
+                separator
+              )}
               <span
-                className={`token${isSourceHighlighted(sentenceId, token) ? " is-highlighted" : ""}`}
+                className={`token${
+                  isSourceHighlighted(sentenceId, tokenKey, index) ? " is-highlighted" : ""
+                }`}
                 style={
                   dictionaryIndex.bySource.has(token)
-                    ? { color: dictionaryIndex.bySource.get(token)?.color }
+                    ? token === "и"
+                      ? isCliticI(tokens, index) || index === lastStandaloneIIndex
+                        ? { color: dictionaryIndex.bySource.get(token)?.color }
+                        : undefined
+                      : { color: dictionaryIndex.bySource.get(token)?.color }
                     : undefined
                 }
-                onMouseEnter={() => activateFromSourceToken(token)}
+                onMouseEnter={() => activateFromSourceToken(tokenKey)}
                 onMouseLeave={clearActive}
               >
                 {token}
@@ -308,28 +445,34 @@ export default function Home() {
   }
 
   function renderTranslation(sentenceId: number, translation: string) {
-    const { wordTokens, englishNormalizedTokens } = parseTranslation(translation);
+    const { wordTokens, englishNormalizedTokens, englishKeys } = parseTranslation(translation);
     const meta = entryMetaById.get(sentenceId);
+    const isFutureQuestion =
+      englishNormalizedTokens.includes("will") || englishNormalizedTokens.includes("shall");
+    const futureQuestionSourceKey = meta?.sourceKeySet.has("ала")
+      ? "ала"
+      : meta?.sourceKeySet.has("ад")
+        ? "ад"
+        : null;
     return (
       <div className="entry-translation">
         {wordTokens.map((token, index) => {
-          const entry = translationEntryForIndex(englishNormalizedTokens, index);
-          const englishKey = englishNormalizedTokens[index] ?? "";
+          const entry = translationEntryForIndex(englishNormalizedTokens, index, meta?.sourceTokens ?? []);
+          const englishKey = englishKeys[index] ?? "";
           const isHighlighted =
             !!entry &&
             !!activeSource &&
             entry.source === activeSource &&
             (activeOrigin !== "english" ||
-              (activeEnglishKey === englishKey && !!meta?.sourceTokenSet.has(activeSource)));
-          const isFutureQuestion =
-            englishNormalizedTokens.includes("will") || englishNormalizedTokens.includes("shall");
+              (activeEnglishKey === englishKey && !!meta?.sourceKeySet.has(activeSource)));
           const isQuestionMarkHighlighted =
             token.punctuation === "?" &&
             isFutureQuestion &&
             activeOrigin === "english" &&
-            activeSource === "ала" &&
+            !!futureQuestionSourceKey &&
+            activeSource === futureQuestionSourceKey &&
             activeEnglishKey === "?" &&
-            !!meta?.sourceTokenSet.has("ала");
+            !!meta?.sourceKeySet.has(futureQuestionSourceKey);
           return (
           <span key={`${token.word}${token.punctuation}-${index}`}>
             {index ? " " : ""}
@@ -338,8 +481,8 @@ export default function Home() {
               style={entry ? { color: entry.color } : undefined}
               onMouseEnter={() => {
                 if (!entry) return;
-                const sourceTokenSet = meta?.sourceTokenSet;
-                if (!sourceTokenSet?.has(entry.source)) return;
+                const sourceKeySet = meta?.sourceKeySet;
+                if (!sourceKeySet?.has(entry.source)) return;
                 setActive({ origin: "english", source: entry.source, englishKey });
               }}
               onMouseLeave={clearActive}
@@ -350,13 +493,13 @@ export default function Home() {
               <span
                 className={`token${isQuestionMarkHighlighted ? " is-highlighted" : ""}`}
                 style={
-                  token.punctuation === "?" && isFutureQuestion
-                    ? { color: dictionaryIndex.bySource.get("ала")?.color }
+                  token.punctuation === "?" && isFutureQuestion && futureQuestionSourceKey
+                    ? { color: dictionaryIndex.bySource.get(futureQuestionSourceKey)?.color }
                     : undefined
                 }
                 onMouseEnter={() =>
-                  token.punctuation === "?" && isFutureQuestion
-                    ? setActive({ origin: "english", source: "ала", englishKey: "?" })
+                  token.punctuation === "?" && isFutureQuestion && futureQuestionSourceKey
+                    ? setActive({ origin: "english", source: futureQuestionSourceKey, englishKey: "?" })
                     : null
                 }
                 onMouseLeave={clearActive}
@@ -408,6 +551,68 @@ export default function Home() {
         } as React.CSSProperties
       }
     >
+      <div className="mode-switch">
+        <div
+          role="tablist"
+          aria-label="View mode"
+          style={{
+            display: "inline-flex",
+            padding: 2,
+            border: "1px solid rgb(102, 102, 102)",
+            borderRadius: 999,
+            background: "rgb(11, 11, 11)",
+            gap: 2,
+          }}
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "statement"}
+            onClick={() => setMode("statement")}
+            style={{
+              border: "none",
+              borderRadius: 999,
+              padding: "6px 12px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              background: mode === "statement" ? "rgb(229, 231, 235)" : "transparent",
+              color: mode === "statement" ? "rgb(11, 11, 11)" : "rgb(203, 213, 225)",
+              transition: "background 120ms, color 120ms",
+              boxShadow:
+                mode === "statement"
+                  ? "rgba(229, 231, 235, 0.25) 0px 0px 0px 1px"
+                  : undefined,
+            }}
+          >
+            statement
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "solution"}
+            onClick={() => setMode("solution")}
+            style={{
+              border: "none",
+              borderRadius: 999,
+              padding: "6px 12px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              background: mode === "solution" ? "rgb(229, 231, 235)" : "transparent",
+              color: mode === "solution" ? "rgb(11, 11, 11)" : "rgb(203, 213, 225)",
+              transition: "background 120ms, color 120ms",
+              boxShadow:
+                mode === "solution"
+                  ? "rgba(229, 231, 235, 0.25) 0px 0px 0px 1px"
+                  : undefined,
+            }}
+          >
+            solution
+          </button>
+        </div>
+      </div>
+
       <div className="sentences">
         <div className="sentences-columns">
           {SENTENCE_GROUP_COLUMNS.map((column) => (
@@ -417,12 +622,18 @@ export default function Home() {
                 <section key={group.title} className="group">
                   <h3 className="group-title">{group.title}</h3>
                   <ol className="group-list">
-                    {group.sentences.map((id) => {
+                    {(mode === "solution"
+                      ? [...group.sentences, ...(group.solutionAppend ?? [])]
+                      : group.sentences
+                    ).map((id) => {
                       const entry = entryById.get(id);
                       if (!entry) return null;
+                      const isSolutionNumber = mode === "solution" && entry.id >= 21;
                       return (
                         <li key={entry.id} className="sentence-item">
-                          <div className="entry-number">{entry.id}.</div>
+                          <div className={`entry-number${isSolutionNumber ? " is-solution" : ""}`}>
+                            {entry.id}.
+                          </div>
                           <div>
                             {renderSource(entry.id, entry.source)}
                             {entry.translation ? renderTranslation(entry.id, entry.translation) : null}
@@ -436,6 +647,7 @@ export default function Home() {
             </section>
           ))}
         </div>
+
       </div>
 
       <section className="dictionary">
