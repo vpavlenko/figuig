@@ -2,6 +2,9 @@
 
 import { useMemo, useState } from "react";
 
+const EXAMPLE_GAP_PX = 10;
+const SOURCE_ENGLISH_GAP_PX = 0;
+
 const DICTIONARY = [
   { source: "учу", english: "couscous", color: "#38bdf8" },
   { source: "муд", english: "to prepare", color: "#22c55e" },
@@ -17,16 +20,17 @@ const DICTIONARY = [
   { source: "с", english: "he", color: "#4ade80" },
   { source: "и", english: "he", color: "#facc15" },
   { source: "н", english: "POSSESSIVE", color: "#93c5fd" },
+  { source: "ситф", english: "to let in",  },
 ];
 
 export default function Home() {
   const entries = [
     { id: 1, source: "амтукл н х и муд учу", translation: "My friend prepared the couscous." },
     { id: 2, source: "муд х учу", translation: "I prepared the couscous." },
-    { id: 3, source: "ади муд учу", translation: "He will prepare the couscous." },
+    { id: 3, source: "д и муд учу", translation: "He will prepare the couscous." },
     {
       id: 4,
-      source: "амтукл инух мани и муд учу",
+      source: "амтукл н х мани и муд учу",
       translation: "Where did my friend prepare the couscous?",
     },
     { id: 5, source: "мани ала и муд учу", translation: "Where will he prepare the couscous?" },
@@ -37,7 +41,7 @@ export default function Home() {
     { id: 10, source: "мани шм ала и ситф", translation: "Where will he let you (fem.) in?" },
     { id: 11, source: "и ситф и", translation: "He let him in." },
     { id: 12, source: "и муд и", translation: "He prepared him/it." },
-    { id: 13, source: "ас и суфғ", translation: "He will let him out." },
+    { id: 13, source: "с и суфғ", translation: "He will let him out." },
     { id: 14, source: "мани с и ситф", translation: "Where did he let him in?" },
     { id: 15, source: "мани с ала и фр", translation: "Where will he hide him?" },
     { id: 16, source: "и ситф амтукл н с", translation: "He let his friend in." },
@@ -45,7 +49,7 @@ export default function Home() {
     { id: 18, source: "фр х шм", translation: "I hid you (fem.)." },
     { id: 19, source: "рз х с", translation: "I broke him/it." },
     { id: 20, source: "суфғ х с", translation: "I let (past) him out." },
-    { id: 21, source: "ад и рз тажра инух", translation: "" },
+    { id: 21, source: "д и рз тажра н х", translation: "" },
     { id: 22, source: "амтукл н х мани шм ала и фр", translation: "" },
   ];
 
@@ -110,11 +114,9 @@ export default function Home() {
             <span
               className={`token${isSourceHighlighted(token) ? " is-highlighted" : ""}`}
               style={
-                isSourceHighlighted(token)
-                  ? undefined
-                  : dictionaryIndex.bySource.has(token)
-                    ? { color: dictionaryIndex.bySource.get(token)?.color }
-                    : undefined
+                dictionaryIndex.bySource.has(token)
+                  ? { color: dictionaryIndex.bySource.get(token)?.color }
+                  : undefined
               }
               onMouseEnter={() => activateFromSourceToken(token)}
               onMouseLeave={clearActive}
@@ -137,13 +139,11 @@ export default function Home() {
             <span
               className={`token${isEnglishHighlighted(token) ? " is-highlighted" : ""}`}
               style={
-                isEnglishHighlighted(token)
-                  ? undefined
-                  : (() => {
-                      const englishNormalized = normalizeEnglish(token);
-                      const entry = dictionaryIndex.byEnglish.get(englishNormalized);
-                      return entry ? { color: entry.color } : undefined;
-                    })()
+                (() => {
+                  const englishNormalized = normalizeEnglish(token);
+                  const entry = dictionaryIndex.byEnglish.get(englishNormalized);
+                  return entry ? { color: entry.color } : undefined;
+                })()
               }
               onMouseEnter={() => activateFromEnglishToken(token)}
               onMouseLeave={clearActive}
@@ -157,7 +157,14 @@ export default function Home() {
   }
 
   return (
-    <main>
+    <main
+      style={
+        {
+          ["--example-gap"]: `${EXAMPLE_GAP_PX}px`,
+          ["--source-english-gap"]: `${SOURCE_ENGLISH_GAP_PX}px`,
+        } as React.CSSProperties
+      }
+    >
       <div className="sentences">
         <ol>
           {entries.map((entry) => (
@@ -185,7 +192,7 @@ export default function Home() {
                   className={`token dictionary-source${
                     isSourceActive ? " is-highlighted" : ""
                   }`}
-                  style={isSourceActive ? undefined : { color: entry.color }}
+                  style={{ color: entry.color }}
                   onMouseEnter={() =>
                     setActive({ source: entry.source, english: entry.english })
                   }
@@ -198,7 +205,7 @@ export default function Home() {
                   className={`token dictionary-english${
                     isEnglishActive ? " is-highlighted" : ""
                   }`}
-                  style={isEnglishActive ? undefined : { color: entry.color }}
+                  style={{ color: entry.color }}
                   onMouseEnter={() =>
                     setActive({ source: entry.source, english: entry.english })
                   }

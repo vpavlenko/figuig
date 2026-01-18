@@ -14,16 +14,16 @@ main {
   gap: 2.5rem;
 }
 
-ol {
+.sentences ol {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--example-gap, 1.25rem);
 }
 
-li {
+.sentences li {
   display: flex;
   gap: 1rem;
 }
@@ -38,6 +38,9 @@ li {
   flex-shrink: 0;
   border-left: 1px solid #27272a;
   padding-left: 1.5rem;
+  position: sticky;
+  top: 2.5rem;
+  align-self: flex-start;
 }
 
 .dictionary-title {
@@ -75,6 +78,7 @@ li {
   color: #a1a1aa;
   font-variant-numeric: tabular-nums;
   font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .entry-source {
@@ -83,7 +87,7 @@ li {
 }
 
 .entry-translation {
-  margin-top: 0.25rem;
+  margin-top: var(--source-english-gap, 0.25rem);
   font-size: 0.95rem;
   line-height: 1.45;
   color: #a1a1aa;
@@ -95,6 +99,13 @@ li {
 }
 
 .token.is-highlighted {
-  background: #fbbf24;
-  color: #000;
+  box-shadow: 0 0 0 1px #fbbf24;
+}
+
+@media (min-width: 1024px) {
+  .sentences ol {
+    grid-auto-flow: column;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(11, auto);
+  }
 }
