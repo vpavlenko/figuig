@@ -22,7 +22,7 @@ const DICTIONARY = [
 
 export default function Home() {
   const entries = [
-    { id: 1, source: "амтукл н х и-муд учу", translation: "My friend prepared the couscous." },
+    { id: 1, source: "амтукл н х и муд учу", translation: "My friend prepared the couscous." },
     { id: 2, source: "муд х учу", translation: "I prepared the couscous." },
     { id: 3, source: "ади муд учу", translation: "He will prepare the couscous." },
     {
@@ -30,7 +30,7 @@ export default function Home() {
       source: "амтукл инух мани и-муд учу",
       translation: "Where did my friend prepare the couscous?",
     },
-    { id: 5, source: "мани ала и-муд учу", translation: "Where will he prepare the couscous?" },
+    { id: 5, source: "мани ала и муд учу", translation: "Where will he prepare the couscous?" },
     { id: 6, source: "мани ала фр х тажра", translation: "Where shall I hide the dish?" },
     { id: 7, source: "с муд х", translation: "I will prepare him/it." },
     { id: 8, source: "шм и фр", translation: "He will hide you (fem.)." },
@@ -39,15 +39,15 @@ export default function Home() {
     { id: 11, source: "и ситф и", translation: "He let him in." },
     { id: 12, source: "и муд и", translation: "He prepared him/it." },
     { id: 13, source: "ас и суфғ", translation: "He will let him out." },
-    { id: 14, source: "мани с и-ситф", translation: "Where did he let him in?" },
-    { id: 15, source: "мани с ала и-фр", translation: "Where will he hide him?" },
-    { id: 16, source: "и-ситф амтукл н с", translation: "He let his friend in." },
-    { id: 17, source: "и-рз и", translation: "He broke him/it." },
+    { id: 14, source: "мани с и ситф", translation: "Where did he let him in?" },
+    { id: 15, source: "мани с ала и фр", translation: "Where will he hide him?" },
+    { id: 16, source: "и ситф амтукл н с", translation: "He let his friend in." },
+    { id: 17, source: "и рз и", translation: "He broke him/it." },
     { id: 18, source: "фр х шм", translation: "I hid you (fem.)." },
     { id: 19, source: "рз х с", translation: "I broke him/it." },
     { id: 20, source: "суфғ х с", translation: "I let (past) him out." },
-    { id: 21, source: "ад и-рз тажра инух", translation: "" },
-    { id: 22, source: "амтукл инух мани шм ала и-фр", translation: "" },
+    { id: 21, source: "ад и рз тажра инух", translation: "" },
+    { id: 22, source: "амтукл н х мани шм ала и фр", translation: "" },
   ];
 
   const dictionary = DICTIONARY;
