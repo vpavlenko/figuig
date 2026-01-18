@@ -11,7 +11,7 @@ const COLOR_LIGHTNESS_LIGHT = "70%";
 
 const VERB_SOURCES = new Set(["муд", "суфғ", "фр", "рз", "ситф"]);
 const PRONOUN_SOURCES = new Set(["шм", "х", "с", "и"]);
-const PARTICLE_SOURCES = new Set(["мани", "н", "ала", "д"]);
+const PARTICLE_SOURCES = new Set(["мани", "ин", "ала", "д"]);
 const NOUN_SOURCES = new Set(["мтукл", "тажра", "учу"]);
 
 const DICTIONARY_GROUPS: Array<{
@@ -98,7 +98,7 @@ const DICTIONARY = [
     englishForms: ["where"],
   },
   {
-    source: "н",
+    source: "ин",
     english: "POSSESSIVE",
     color: `hsl(338 85% ${COLOR_LIGHTNESS_LIGHT})`,
   },
@@ -133,12 +133,12 @@ const SENTENCE_GROUP_COLUMNS: Array<{
 
 export default function Home() {
   const entries = [
-    { id: 1, source: "мтукл н х и муд учу", translation: "My friend prepared the couscous." },
+    { id: 1, source: "мтукл ин х и муд учу", translation: "My friend prepared the couscous." },
     { id: 2, source: "муд х учу", translation: "I prepared the couscous." },
     { id: 3, source: "д и муд учу", translation: "He will prepare the couscous." },
     {
       id: 4,
-      source: "мтукл н х мани и муд учу ?",
+      source: "мтукл ин х мани и муд учу ?",
       translation: "Where did my friend prepare the couscous?",
     },
     { id: 5, source: "мани ала и муд учу ?", translation: "Where will he prepare the couscous?" },
@@ -152,13 +152,13 @@ export default function Home() {
     { id: 13, source: "с и суфғ", translation: "He will let him out." },
     { id: 14, source: "мани с и ситф ?", translation: "Where did he let him in?" },
     { id: 15, source: "мани с ала и фр ?", translation: "Where will he hide him?" },
-    { id: 16, source: "и ситф мтукл н с", translation: "He let his friend in." },
+    { id: 16, source: "и ситф мтукл ин с", translation: "He let his friend in." },
     { id: 17, source: "и рз и", translation: "He broke him/it." },
     { id: 18, source: "фр х шм", translation: "I hid you-fem." },
     { id: 19, source: "рз х с", translation: "I broke him/it." },
     { id: 20, source: "суфғ х с", translation: "I let (past) him out." },
-    { id: 21, source: "д и рз тажра н х", translation: "" },
-    { id: 22, source: "мтукл н х мани шм ала и фр ?", translation: "" },
+    { id: 21, source: "д и рз тажра ин х", translation: "" },
+    { id: 22, source: "мтукл ин х мани шм ала и фр ?", translation: "" },
   ];
 
   const dictionary = DICTIONARY;
@@ -167,6 +167,38 @@ export default function Home() {
   function normalizeEnglish(token: string) {
     return token.toLowerCase().replace(/[^a-z]+/g, "");
   }
+
+  function parseTranslation(translation: string) {
+    const rawTokens = translation.split(/\s+/).filter(Boolean);
+    const wordTokens = rawTokens.map((token) => {
+      const lastChar = token.slice(-1);
+      if (lastChar === "." || lastChar === "?" || lastChar === "!") {
+        return { word: token.slice(0, -1), punctuation: lastChar };
+      }
+      return { word: token, punctuation: "" };
+    });
+    const englishNormalizedTokens = wordTokens.map((token) => normalizeEnglish(token.word));
+    const englishTokenSet = new Set<string>();
+    for (const t of englishNormalizedTokens) {
+      if (t) englishTokenSet.add(t);
+    }
+    for (const t of wordTokens) {
+      if (t.punctuation) englishTokenSet.add(t.punctuation);
+    }
+    return { wordTokens, englishNormalizedTokens, englishTokenSet };
+  }
+
+  const entryMetaById = useMemo(() => {
+    const meta = new Map<number, { sourceTokenSet: Set<string>; englishTokenSet: Set<string> }>();
+    for (const entry of entries) {
+      const sourceTokenSet = new Set(entry.source.split(/\s+/).filter(Boolean));
+      const englishTokenSet = entry.translation
+        ? parseTranslation(entry.translation).englishTokenSet
+        : new Set<string>();
+      meta.set(entry.id, { sourceTokenSet, englishTokenSet });
+    }
+    return meta;
+  }, [entries]);
 
   const dictionaryIndex = useMemo(() => {
     const bySource = new Map<string, (typeof DICTIONARY)[number]>();
@@ -180,13 +212,17 @@ export default function Home() {
   }, [dictionary]);
 
   const [active, setActive] = useState<{
+    origin: "source" | "english";
     source?: string;
+    englishKey?: string;
   } | null>(null);
 
   const activeSource = active?.source ?? null;
+  const activeEnglishKey = active?.englishKey ?? null;
+  const activeOrigin = active?.origin ?? null;
 
   function activateFromSourceToken(rawToken: string) {
-    setActive({ source: rawToken });
+    setActive({ origin: "source", source: rawToken });
   }
 
   function letSenseForIndex(englishNormalizedTokens: string[], index: number) {
@@ -202,6 +238,7 @@ export default function Home() {
 
     if (token === "my") return dictionaryIndex.bySource.get("х") ?? null;
     if (token === "his") return dictionaryIndex.bySource.get("с") ?? null;
+    if (token === "will" || token === "shall") return dictionaryIndex.bySource.get("ала") ?? null;
 
     if (token === "let" || token === "lets" || token === "letting") {
       return letSenseForIndex(englishNormalizedTokens, index);
@@ -218,12 +255,17 @@ export default function Home() {
     setActive(null);
   }
 
-  function isSourceHighlighted(rawToken: string) {
+  function isSourceHighlighted(sentenceId: number, rawToken: string) {
     if (!activeSource) return false;
-    return rawToken === activeSource;
+    if (rawToken !== activeSource) return false;
+    if (activeOrigin !== "english") return true;
+    if (!activeEnglishKey) return false;
+
+    const meta = entryMetaById.get(sentenceId);
+    return !!meta && meta.englishTokenSet.has(activeEnglishKey);
   }
 
-  function renderSource(source: string) {
+  function renderSource(sentenceId: number, source: string) {
     const tokens = source.split(/\s+/).filter(Boolean);
     return (
       <div className="entry-source">
@@ -233,9 +275,9 @@ export default function Home() {
               ? ""
               : token === "?"
                 ? ""
-                : token === "н" && index > 0 && index < tokens.length - 1
+                : token === "ин" && index > 0 && index < tokens.length - 1
                     ? "-"
-                    : tokens[index - 1] === "н" && index - 2 >= 0
+                    : tokens[index - 1] === "ин" && index - 2 >= 0
                       ? "-"
                     : tokens[index - 1] === "и" && VERB_SOURCES.has(token)
                         ? "="
@@ -247,7 +289,7 @@ export default function Home() {
             <span key={`${token}-${index}`}>
               {separator}
               <span
-                className={`token${isSourceHighlighted(token) ? " is-highlighted" : ""}`}
+                className={`token${isSourceHighlighted(sentenceId, token) ? " is-highlighted" : ""}`}
                 style={
                   dictionaryIndex.bySource.has(token)
                     ? { color: dictionaryIndex.bySource.get(token)?.color }
@@ -265,33 +307,63 @@ export default function Home() {
     );
   }
 
-  function renderTranslation(translation: string) {
-    const tokens = translation.split(/\s+/).filter(Boolean);
-    const wordTokens = tokens.map((token) => {
-      const lastChar = token.slice(-1);
-      if (lastChar === "." || lastChar === "?" || lastChar === "!") {
-        return { word: token.slice(0, -1), punctuation: lastChar };
-      }
-      return { word: token, punctuation: "" };
-    });
-    const englishNormalizedTokens = wordTokens.map((token) => normalizeEnglish(token.word));
+  function renderTranslation(sentenceId: number, translation: string) {
+    const { wordTokens, englishNormalizedTokens } = parseTranslation(translation);
+    const meta = entryMetaById.get(sentenceId);
     return (
       <div className="entry-translation">
         {wordTokens.map((token, index) => {
           const entry = translationEntryForIndex(englishNormalizedTokens, index);
-          const isHighlighted = !!entry && !!activeSource && entry.source === activeSource;
+          const englishKey = englishNormalizedTokens[index] ?? "";
+          const isHighlighted =
+            !!entry &&
+            !!activeSource &&
+            entry.source === activeSource &&
+            (activeOrigin !== "english" ||
+              (activeEnglishKey === englishKey && !!meta?.sourceTokenSet.has(activeSource)));
+          const isFutureQuestion =
+            englishNormalizedTokens.includes("will") || englishNormalizedTokens.includes("shall");
+          const isQuestionMarkHighlighted =
+            token.punctuation === "?" &&
+            isFutureQuestion &&
+            activeOrigin === "english" &&
+            activeSource === "ала" &&
+            activeEnglishKey === "?" &&
+            !!meta?.sourceTokenSet.has("ала");
           return (
           <span key={`${token.word}${token.punctuation}-${index}`}>
             {index ? " " : ""}
             <span
               className={`token${isHighlighted ? " is-highlighted" : ""}`}
               style={entry ? { color: entry.color } : undefined}
-              onMouseEnter={() => (entry ? setActive({ source: entry.source }) : null)}
+              onMouseEnter={() => {
+                if (!entry) return;
+                const sourceTokenSet = meta?.sourceTokenSet;
+                if (!sourceTokenSet?.has(entry.source)) return;
+                setActive({ origin: "english", source: entry.source, englishKey });
+              }}
               onMouseLeave={clearActive}
             >
               {token.word}
             </span>
-            {token.punctuation ? <span>{token.punctuation}</span> : null}
+            {token.punctuation ? (
+              <span
+                className={`token${isQuestionMarkHighlighted ? " is-highlighted" : ""}`}
+                style={
+                  token.punctuation === "?" && isFutureQuestion
+                    ? { color: dictionaryIndex.bySource.get("ала")?.color }
+                    : undefined
+                }
+                onMouseEnter={() =>
+                  token.punctuation === "?" && isFutureQuestion
+                    ? setActive({ origin: "english", source: "ала", englishKey: "?" })
+                    : null
+                }
+                onMouseLeave={clearActive}
+              >
+                {token.punctuation}
+              </span>
+            ) : null}
           </span>
         );
         })}
@@ -307,7 +379,7 @@ export default function Home() {
         <span
           className={`token dictionary-source${isSourceActive ? " is-highlighted" : ""}`}
           style={{ color: entry.color }}
-          onMouseEnter={() => setActive({ source: entry.source })}
+          onMouseEnter={() => setActive({ origin: "source", source: entry.source })}
           onMouseLeave={clearActive}
         >
           {entry.source}
@@ -316,7 +388,7 @@ export default function Home() {
         <span
           className={`token dictionary-english${isEnglishActive ? " is-highlighted" : ""}`}
           style={{ color: entry.color }}
-          onMouseEnter={() => setActive({ source: entry.source })}
+          onMouseEnter={() => setActive({ origin: "source", source: entry.source })}
           onMouseLeave={clearActive}
         >
           {entry.english}
@@ -352,8 +424,8 @@ export default function Home() {
                         <li key={entry.id} className="sentence-item">
                           <div className="entry-number">{entry.id}.</div>
                           <div>
-                            {renderSource(entry.source)}
-                            {entry.translation ? renderTranslation(entry.translation) : null}
+                            {renderSource(entry.id, entry.source)}
+                            {entry.translation ? renderTranslation(entry.id, entry.translation) : null}
                           </div>
                         </li>
                       );
