@@ -3,21 +3,20 @@
 import { useMemo, useState } from "react";
 
 const DICTIONARY = [
-  { source: "учу", english: "couscous" },
-  { source: "муд", english: "to prepare" },
-  { source: "ала", english: "FUTURE TENSE" },
-  { source: "тажра", english: "dish" },
-  { source: "мани", english: "where" },
-  { source: "шм", english: "you (fem.)" },
-  { source: "суфғ", english: "to let out" },
-  { source: "амтукл", english: "friend" },
-  { source: "фр", english: "to hide" },
-  { source: "рз", english: "to break" },
-  { source: "х", english: "I" },
-  { source: "с", english: "he" },
-  { source: "и", english: "he" },
-  { source: "н", english: "POSSESSIVE" },
-
+  { source: "учу", english: "couscous", color: "#38bdf8" },
+  { source: "муд", english: "to prepare", color: "#22c55e" },
+  { source: "ала", english: "FUTURE TENSE", color: "#a78bfa" },
+  { source: "тажра", english: "dish", color: "#fbbf24" },
+  { source: "мани", english: "where", color: "#f472b6" },
+  { source: "шм", english: "you (fem.)", color: "#fb7185" },
+  { source: "суфғ", english: "to let out", color: "#2dd4bf" },
+  { source: "амтукл", english: "friend", color: "#60a5fa" },
+  { source: "фр", english: "to hide", color: "#34d399" },
+  { source: "рз", english: "to break", color: "#f97316" },
+  { source: "х", english: "I", color: "#e879f9" },
+  { source: "с", english: "he", color: "#4ade80" },
+  { source: "и", english: "he", color: "#facc15" },
+  { source: "н", english: "POSSESSIVE", color: "#93c5fd" },
 ];
 
 export default function Home() {
@@ -27,7 +26,7 @@ export default function Home() {
     { id: 3, source: "ади муд учу", translation: "He will prepare the couscous." },
     {
       id: 4,
-      source: "амтукл инух мани и-муд учу",
+      source: "амтукл инух мани и муд учу",
       translation: "Where did my friend prepare the couscous?",
     },
     { id: 5, source: "мани ала и муд учу", translation: "Where will he prepare the couscous?" },
@@ -52,69 +51,39 @@ export default function Home() {
 
   const dictionary = DICTIONARY;
 
-  function stemSource(token: string) {
-    return token.replace(/^и-/, "");
-  }
-
   function normalizeEnglish(token: string) {
     return token.toLowerCase().replace(/[^a-z]+/g, "");
   }
 
   const dictionaryIndex = useMemo(() => {
-    const bySource = new Map<string, string>();
-    const byEnglish = new Map<string, string>();
+    const bySource = new Map<string, (typeof DICTIONARY)[number]>();
+    const byEnglish = new Map<string, (typeof DICTIONARY)[number]>();
     for (const entry of dictionary) {
-      bySource.set(entry.source, entry.english);
-      byEnglish.set(normalizeEnglish(entry.english), entry.source);
+      bySource.set(entry.source, entry);
+      byEnglish.set(normalizeEnglish(entry.english), entry);
     }
     return { bySource, byEnglish };
   }, [dictionary]);
 
-  const stemColor = useMemo(() => {
-    const palette = [
-      "#22c55e",
-      "#38bdf8",
-      "#a78bfa",
-      "#f472b6",
-      "#fb7185",
-      "#fbbf24",
-      "#60a5fa",
-      "#34d399",
-      "#f97316",
-      "#e879f9",
-      "#4ade80",
-      "#2dd4bf",
-    ];
-
-    function hashString(value: string) {
-      let hash = 5381;
-      for (let i = 0; i < value.length; i++) hash = (hash * 33) ^ value.charCodeAt(i);
-      return hash >>> 0;
-    }
-
-    return (stem: string) => palette[hashString(stem) % palette.length];
-  }, []);
-
   const [active, setActive] = useState<{
-    sourceStem?: string;
+    source?: string;
     english?: string;
   } | null>(null);
 
-  const activeSourceStem = active?.sourceStem ?? null;
+  const activeSource = active?.source ?? null;
   const activeEnglish = active?.english ?? null;
   const activeEnglishNormalized = activeEnglish ? normalizeEnglish(activeEnglish) : null;
 
   function activateFromSourceToken(rawToken: string) {
-    const sourceStem = stemSource(rawToken);
-    const english = dictionaryIndex.bySource.get(sourceStem);
-    setActive({ sourceStem, english });
+    const english = dictionaryIndex.bySource.get(rawToken)?.english;
+    setActive({ source: rawToken, english });
   }
 
   function activateFromEnglishToken(rawToken: string) {
     const englishNormalized = normalizeEnglish(rawToken);
     if (!englishNormalized) return;
-    const sourceStem = dictionaryIndex.byEnglish.get(englishNormalized);
-    setActive({ sourceStem, english: rawToken });
+    const source = dictionaryIndex.byEnglish.get(englishNormalized)?.source;
+    setActive({ source, english: rawToken });
   }
 
   function clearActive() {
@@ -122,8 +91,8 @@ export default function Home() {
   }
 
   function isSourceHighlighted(rawToken: string) {
-    if (!activeSourceStem) return false;
-    return stemSource(rawToken) === activeSourceStem;
+    if (!activeSource) return false;
+    return rawToken === activeSource;
   }
 
   function isEnglishHighlighted(rawToken: string) {
@@ -138,20 +107,20 @@ export default function Home() {
         {tokens.map((token, index) => (
           <span key={`${token}-${index}`}>
             {index ? " " : ""}
-            {(() => {
-              const highlighted = isSourceHighlighted(token);
-              const stem = stemSource(token);
-              return (
             <span
               className={`token${isSourceHighlighted(token) ? " is-highlighted" : ""}`}
-              style={highlighted ? undefined : { color: stemColor(stem) }}
+              style={
+                isSourceHighlighted(token)
+                  ? undefined
+                  : dictionaryIndex.bySource.has(token)
+                    ? { color: dictionaryIndex.bySource.get(token)?.color }
+                    : undefined
+              }
               onMouseEnter={() => activateFromSourceToken(token)}
               onMouseLeave={clearActive}
             >
               {token}
             </span>
-              );
-            })()}
           </span>
         ))}
       </div>
@@ -165,23 +134,22 @@ export default function Home() {
         {tokens.map((token, index) => (
           <span key={`${token}-${index}`}>
             {index ? " " : ""}
-            {(() => {
-              const highlighted = isEnglishHighlighted(token);
-              const englishNormalized = normalizeEnglish(token);
-              const linkedStem = dictionaryIndex.byEnglish.get(englishNormalized) ?? null;
-              return (
             <span
               className={`token${isEnglishHighlighted(token) ? " is-highlighted" : ""}`}
               style={
-                highlighted || !linkedStem ? undefined : { color: stemColor(linkedStem) }
+                isEnglishHighlighted(token)
+                  ? undefined
+                  : (() => {
+                      const englishNormalized = normalizeEnglish(token);
+                      const entry = dictionaryIndex.byEnglish.get(englishNormalized);
+                      return entry ? { color: entry.color } : undefined;
+                    })()
               }
               onMouseEnter={() => activateFromEnglishToken(token)}
               onMouseLeave={clearActive}
             >
               {token}
             </span>
-              );
-            })()}
           </span>
         ))}
       </div>
@@ -208,7 +176,7 @@ export default function Home() {
         <h2 className="dictionary-title">Dictionary</h2>
         <div className="dictionary-list">
           {dictionary.map((entry) => {
-            const isSourceActive = activeSourceStem === entry.source;
+            const isSourceActive = activeSource === entry.source;
             const isEnglishActive =
               activeEnglishNormalized === normalizeEnglish(entry.english);
             return (
@@ -217,9 +185,9 @@ export default function Home() {
                   className={`token dictionary-source${
                     isSourceActive ? " is-highlighted" : ""
                   }`}
-                  style={isSourceActive ? undefined : { color: stemColor(entry.source) }}
+                  style={isSourceActive ? undefined : { color: entry.color }}
                   onMouseEnter={() =>
-                    setActive({ sourceStem: entry.source, english: entry.english })
+                    setActive({ source: entry.source, english: entry.english })
                   }
                   onMouseLeave={clearActive}
                 >
@@ -230,9 +198,9 @@ export default function Home() {
                   className={`token dictionary-english${
                     isEnglishActive ? " is-highlighted" : ""
                   }`}
-                  style={isEnglishActive ? undefined : { color: stemColor(entry.source) }}
+                  style={isEnglishActive ? undefined : { color: entry.color }}
                   onMouseEnter={() =>
-                    setActive({ sourceStem: entry.source, english: entry.english })
+                    setActive({ source: entry.source, english: entry.english })
                   }
                   onMouseLeave={clearActive}
                 >
