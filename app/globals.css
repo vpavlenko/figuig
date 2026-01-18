@@ -1,26 +1,100 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: #000;
+  color: #f4f4f5;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+    "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+main {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+  display: flex;
+  gap: 2.5rem;
+}
+
+ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+li {
+  display: flex;
+  gap: 1rem;
+}
+
+.sentences {
+  flex: 1;
+  min-width: 0;
+}
+
+.dictionary {
+  width: 20rem;
+  flex-shrink: 0;
+  border-left: 1px solid #27272a;
+  padding-left: 1.5rem;
+}
+
+.dictionary-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e4e4e7;
+}
+
+.dictionary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dictionary-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  font-size: 0.95rem;
+}
+
+.dictionary-source {
+  color: #fafafa;
+}
+
+.dictionary-english {
+  color: #a1a1aa;
+}
+
+.entry-number {
+  width: 2.5rem;
+  flex-shrink: 0;
+  text-align: right;
+  color: #a1a1aa;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+}
+
+.entry-source {
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+.entry-translation {
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #a1a1aa;
+}
+
+.token {
+  padding: 0 0.15rem;
+  border-radius: 0.25rem;
+}
+
+.token.is-highlighted {
+  background: #fbbf24;
+  color: #000;
 }
