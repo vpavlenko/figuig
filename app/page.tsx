@@ -11,7 +11,7 @@ const COLOR_LIGHTNESS_LIGHT = "70%";
 
 const VERB_SOURCES = new Set(["муд", "суфғ", "фр", "рз", "ситф"]);
 const PRONOUN_SOURCES = new Set(["шм", "х", "с", "и"]);
-const PARTICLE_SOURCES = new Set(["мани", "ин", "ала", "д"]);
+const PARTICLE_SOURCES = new Set(["мани", "ин", "ала", "ад"]);
 const NOUN_SOURCES = new Set(["мтукл", "тажра", "учу"]);
 
 const DICTIONARY_GROUPS: Array<{
@@ -90,7 +90,7 @@ const DICTIONARY = [
     english: "FUTURE_INTERROGATIVE",
     color: `hsl(270 85% ${COLOR_LIGHTNESS_DARK})`,
   },
-  { source: "д", english: "FUTURE_DECLARATIVE", color: `hsl(293 85% ${COLOR_LIGHTNESS_LIGHT})` },
+  { source: "ад", english: "FUTURE_DECLARATIVE", color: `hsl(293 85% ${COLOR_LIGHTNESS_LIGHT})` },
   {
     source: "мани",
     english: "where",
@@ -135,7 +135,7 @@ export default function Home() {
   const entries = [
     { id: 1, source: "мтукл ин х и муд учу", translation: "My friend prepared the couscous." },
     { id: 2, source: "муд х учу", translation: "I prepared the couscous." },
-    { id: 3, source: "д и муд учу", translation: "He will prepare the couscous." },
+    { id: 3, source: "ад и муд учу", translation: "He will prepare the couscous." },
     {
       id: 4,
       source: "мтукл ин х мани и муд учу ?",
@@ -157,7 +157,7 @@ export default function Home() {
     { id: 18, source: "фр х шм", translation: "I hid you-fem." },
     { id: 19, source: "рз х с", translation: "I broke him/it." },
     { id: 20, source: "суфғ х с", translation: "I let (past) him out." },
-    { id: 21, source: "д и рз тажра ин х", translation: "" },
+    { id: 21, source: "ад и рз тажра ин х", translation: "" },
     { id: 22, source: "мтукл ин х мани шм ала и фр ?", translation: "" },
   ];
 
