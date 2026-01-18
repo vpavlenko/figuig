@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 
-const EXAMPLE_GAP_PX = 0;
+const EXAMPLE_GAP_PX = 4;
 const SOURCE_ENGLISH_GAP_PX = 0;
-const GROUP_GAP_PX = 28;
-const GROUP_TITLE_GAP_PX = 6;
+const GROUP_GAP_PX = 20;
+const GROUP_TITLE_GAP_PX = 4;
 const COLOR_LIGHTNESS_DARK = "55%";
 const COLOR_LIGHTNESS_LIGHT = "70%";
 const JOIN_COLOR = "#888";
