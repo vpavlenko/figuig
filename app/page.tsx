@@ -50,14 +50,11 @@ function transliterateCyrillicToLatin(text: string) {
     .join("");
 }
 
-const DICTIONARY_GROUPS: Array<{
-  title: string;
-  sources: Set<string>;
-}> = [
-  { title: "Nouns", sources: NOUN_SOURCES },
-  { title: "Verbs", sources: VERB_SOURCES },
-  { title: "Pronouns", sources: PRONOUN_SOURCES },
-  { title: "Particles", sources: PARTICLE_SOURCES },
+const DICTIONARY_COLUMNS: Array<{ key: string; sources: Set<string> }> = [
+  { key: "nouns", sources: NOUN_SOURCES },
+  { key: "verbs", sources: VERB_SOURCES },
+  { key: "pronouns", sources: PRONOUN_SOURCES },
+  { key: "particles", sources: PARTICLE_SOURCES },
 ];
 
 const DICTIONARY = [
@@ -748,18 +745,12 @@ export default function Home() {
       </div>
 
       <section className="dictionary">
-        <h2 className="dictionary-title">Dictionary</h2>
         <div className="dictionary-grid">
-          {DICTIONARY_GROUPS.map((group) => {
-            const entriesForGroup = dictionary.filter((entry) =>
-              group.sources.has(entry.source),
-            );
+          {DICTIONARY_COLUMNS.map((group) => {
+            const entriesForGroup = dictionary.filter((entry) => group.sources.has(entry.source));
             return (
-              <div key={group.title} className="dictionary-column">
-                <h3 className="dictionary-column-title">{group.title}</h3>
-                <div className="dictionary-list">
-                  {entriesForGroup.map(renderDictionaryEntry)}
-                </div>
+              <div key={group.key} className="dictionary-column">
+                <div className="dictionary-list">{entriesForGroup.map(renderDictionaryEntry)}</div>
               </div>
             );
           })}
