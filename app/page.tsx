@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 const EXAMPLE_GAP_PX = 4;
 const SOURCE_ENGLISH_GAP_PX = 0;
@@ -164,7 +165,9 @@ const SENTENCE_GROUP_COLUMNS: Array<{
 ];
 
 export default function Home() {
-  const [mode, setMode] = useState<"statement" | "solution">("statement");
+  const searchParams = useSearchParams();
+  const showSolution = searchParams.get("solution") === "1";
+  const mode: "statement" | "solution" = showSolution ? "solution" : "statement";
   const [script, setScript] = useState<"cyrillic" | "latin">("latin");
 
   const entries = [
@@ -646,65 +649,6 @@ export default function Home() {
           </button>
         </div>
 
-        <div
-          role="tablist"
-          aria-label="View mode"
-          style={{
-            display: "inline-flex",
-            padding: 2,
-            border: "1px solid rgb(102, 102, 102)",
-            borderRadius: 999,
-            background: "rgb(11, 11, 11)",
-            gap: 2,
-          }}
-        >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "statement"}
-            onClick={() => setMode("statement")}
-            style={{
-              border: "none",
-              borderRadius: 999,
-              padding: "6px 12px",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
-              background: mode === "statement" ? "rgb(229, 231, 235)" : "transparent",
-              color: mode === "statement" ? "rgb(11, 11, 11)" : "rgb(203, 213, 225)",
-              transition: "background 120ms, color 120ms",
-              boxShadow:
-                mode === "statement"
-                  ? "rgba(229, 231, 235, 0.25) 0px 0px 0px 1px"
-                  : undefined,
-            }}
-          >
-            statement
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "solution"}
-            onClick={() => setMode("solution")}
-            style={{
-              border: "none",
-              borderRadius: 999,
-              padding: "6px 12px",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
-              background: mode === "solution" ? "rgb(229, 231, 235)" : "transparent",
-              color: mode === "solution" ? "rgb(11, 11, 11)" : "rgb(203, 213, 225)",
-              transition: "background 120ms, color 120ms",
-              boxShadow:
-                mode === "solution"
-                  ? "rgba(229, 231, 235, 0.25) 0px 0px 0px 1px"
-                  : undefined,
-            }}
-          >
-            solution
-          </button>
-        </div>
       </div>
 
       <div className="sentences">
