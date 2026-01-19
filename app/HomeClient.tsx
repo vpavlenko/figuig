@@ -18,6 +18,8 @@ const NOUN_SOURCES = new Set(["мтукл", "тажра", "учу"]);
 const CLITIC_I_SOURCE_KEY = "и=";
 const ENGLISH_KEY_HIM_OBJECT = "him_obj";
 
+type DictionaryEntry = { source: string; english: string; color: string; englishForms?: string[] };
+
 const CYR_TO_LAT = {
   а: "a",
   д: "d",
@@ -57,7 +59,7 @@ const DICTIONARY_COLUMNS: Array<{ key: string; sources: Set<string> }> = [
   { key: "particles", sources: PARTICLE_SOURCES },
 ];
 
-const DICTIONARY = [
+const DICTIONARY: DictionaryEntry[] = [
   {
     source: "мтукл",
     english: "friend",
@@ -135,6 +137,12 @@ const DICTIONARY = [
     color: `hsl(338 85% ${COLOR_LIGHTNESS_LIGHT})`,
   },
 ];
+
+const VIRTUAL_CLITIC_I_ENTRY: DictionaryEntry = {
+  source: CLITIC_I_SOURCE_KEY,
+  english: "3sg",
+  color: `hsl(260 85% ${COLOR_LIGHTNESS_LIGHT})`,
+};
 
 const SENTENCE_GROUP_COLUMNS: Array<{
   title: string;
@@ -257,6 +265,18 @@ export default function HomeClient({ showSolution }: { showSolution: boolean }) 
     return sourceTokens[tokenIndex] === "и" && VERB_SOURCES.has(sourceTokens[tokenIndex + 1] ?? "");
   }
 
+  function hasCliticISubject(sourceTokens: string[]) {
+    return sourceTokens.some((_, index) => isCliticI(sourceTokens, index));
+  }
+
+  function hasStandaloneI(sourceTokens: string[]) {
+    return sourceTokens.some((token, index) => token === "и" && !isCliticI(sourceTokens, index));
+  }
+
+  function hasStandaloneS(sourceTokens: string[]) {
+    return sourceTokens.some((token, index) => token === "с" && sourceTokens[index - 1] !== "ин");
+  }
+
   function sourceKeyAt(sourceTokens: string[], tokenIndex: number) {
     const token = sourceTokens[tokenIndex];
     if (token === "и" && isCliticI(sourceTokens, tokenIndex)) return CLITIC_I_SOURCE_KEY;
@@ -307,8 +327,8 @@ export default function HomeClient({ showSolution }: { showSolution: boolean }) 
   }, [allEntries]);
 
   const dictionaryIndex = useMemo(() => {
-    const bySource = new Map<string, (typeof DICTIONARY)[number]>();
-    const byEnglishForm = new Map<string, (typeof DICTIONARY)[number]>();
+    const bySource = new Map<string, DictionaryEntry>();
+    const byEnglishForm = new Map<string, DictionaryEntry>();
     for (const entry of dictionary) {
       bySource.set(entry.source, entry);
       const forms = entry.englishForms?.length ? entry.englishForms : [entry.english];
@@ -331,52 +351,71 @@ export default function HomeClient({ showSolution }: { showSolution: boolean }) 
     setActive({ origin: "source", source: sourceKey });
   }
 
-  function letSenseForIndex(englishNormalizedTokens: string[], index: number) {
-    const window = englishNormalizedTokens.slice(index - 4, index + 5);
-    if (window.includes("out")) return dictionaryIndex.bySource.get("суфғ") ?? null;
-    if (window.includes("in")) return dictionaryIndex.bySource.get("ситф") ?? null;
+  function hasNearbyLetToken(englishNormalizedTokens: string[], index: number, radius: number) {
+    const start = Math.max(0, index - radius);
+    const end = Math.min(englishNormalizedTokens.length, index + radius + 1);
+    return englishNormalizedTokens
+      .slice(start, end)
+      .some((t) => t === "let" || t === "lets" || t === "letting");
+  }
+
+  function letVerbSourceKeyForIndex(englishNormalizedTokens: string[], index: number) {
+    const token = englishNormalizedTokens[index] ?? "";
+    const isLetToken = token === "let" || token === "lets" || token === "letting";
+    const isInOutToken = token === "in" || token === "out";
+    const isPartOfLetPhrase = isLetToken || (isInOutToken && hasNearbyLetToken(englishNormalizedTokens, index, 4));
+    if (!isPartOfLetPhrase) return null;
+    if (englishNormalizedTokens.includes("out")) return "суфғ";
+    if (englishNormalizedTokens.includes("in")) return "ситф";
     return null;
   }
 
   function translationEntryForIndex(
     englishNormalizedTokens: string[],
+    englishKeys: string[],
     index: number,
     sourceTokens: string[]
   ) {
-    const token = englishNormalizedTokens[index];
-    if (!token) return null;
+    const tokenNormalized = englishNormalizedTokens[index] ?? "";
+    const tokenKey = englishKeys[index] ?? tokenNormalized;
+    if (!tokenNormalized) return null;
 
-    if (token === "will" || token === "shall") {
-      const sense = letSenseForIndex(englishNormalizedTokens, index);
-      if (sense?.source) {
-        const isFutureQuestion = englishNormalizedTokens.includes("will") || englishNormalizedTokens.includes("shall");
-        if (isFutureQuestion) return dictionaryIndex.bySource.get("ала") ?? null;
-        return dictionaryIndex.bySource.get("ад") ?? null;
-      }
+    if (tokenNormalized === "will" || tokenNormalized === "shall") {
+      if (sourceTokens.includes("ала")) return dictionaryIndex.bySource.get("ала") ?? null;
+      if (sourceTokens.includes("ад")) return dictionaryIndex.bySource.get("ад") ?? null;
+      return null;
     }
 
-    if (token === "did") {
-      const sense = letSenseForIndex(englishNormalizedTokens, index);
-      if (sense?.source) return null;
+    if (tokenNormalized === "my") return dictionaryIndex.bySource.get("ин") ?? null;
+    if (tokenNormalized === "his") return dictionaryIndex.bySource.get("ин") ?? null;
+
+    if (tokenNormalized === "he") {
+      if (hasCliticISubject(sourceTokens)) return VIRTUAL_CLITIC_I_ENTRY;
+      if (sourceTokens.includes("и")) return dictionaryIndex.bySource.get("и") ?? null;
+      if (hasStandaloneS(sourceTokens)) return dictionaryIndex.bySource.get("с") ?? null;
+      return null;
+    }
+    if (tokenNormalized === "i") return dictionaryIndex.bySource.get("х") ?? null;
+    if (tokenKey === ENGLISH_KEY_HIM_OBJECT) {
+      const isQuestion = sourceTokens.includes("?");
+      const himSourceKey = !isQuestion && hasCliticISubject(sourceTokens) ? "и" : "с";
+
+      if (himSourceKey === "и" && hasStandaloneI(sourceTokens)) return dictionaryIndex.bySource.get("и") ?? null;
+      if (himSourceKey === "с" && hasStandaloneS(sourceTokens)) return dictionaryIndex.bySource.get("с") ?? null;
+
+      if (hasStandaloneS(sourceTokens)) return dictionaryIndex.bySource.get("с") ?? null;
+      if (hasStandaloneI(sourceTokens)) return dictionaryIndex.bySource.get("и") ?? null;
+      return null;
+    }
+    if (tokenNormalized === "youfem") return dictionaryIndex.bySource.get("шм") ?? null;
+    if (tokenNormalized === "where") return dictionaryIndex.bySource.get("мани") ?? null;
+
+    const letVerbSourceKey = letVerbSourceKeyForIndex(englishNormalizedTokens, index);
+    if (letVerbSourceKey && sourceTokens.includes(letVerbSourceKey)) {
+      return dictionaryIndex.bySource.get(letVerbSourceKey) ?? null;
     }
 
-    if (token === "my") return dictionaryIndex.bySource.get("ин") ?? null;
-    if (token === "his") return dictionaryIndex.bySource.get("ин") ?? null;
-
-    if (token === "he") {
-      const himIndex = englishNormalizedTokens.indexOf("him");
-      const isObjectHim = himIndex !== -1 && himIndex === index + 1;
-      if (isObjectHim) return dictionaryIndex.bySource.get("с") ?? null;
-      const lastToken = sourceTokens[sourceTokens.length - 1] ?? "";
-      if (lastToken === "и") return dictionaryIndex.bySource.get("и") ?? null;
-      return dictionaryIndex.bySource.get("с") ?? null;
-    }
-    if (token === "i") return dictionaryIndex.bySource.get("х") ?? null;
-    if (token === ENGLISH_KEY_HIM_OBJECT) return dictionaryIndex.bySource.get("с") ?? null;
-    if (token === "youfem") return dictionaryIndex.bySource.get("шм") ?? null;
-    if (token === "where") return dictionaryIndex.bySource.get("мани") ?? null;
-
-    const direct = dictionaryIndex.byEnglishForm.get(token);
+    const direct = dictionaryIndex.byEnglishForm.get(tokenNormalized);
     if (direct) return direct;
 
     return null;
@@ -402,7 +441,7 @@ export default function HomeClient({ showSolution }: { showSolution: boolean }) 
       if (lastStandaloneIIndex !== -1) return tokenIndex === lastStandaloneIIndex;
     }
 
-    return true;
+    return activeSource === tokenKey;
   }
 
   function renderSource(sentenceId: number, source: string) {
@@ -482,7 +521,12 @@ export default function HomeClient({ showSolution }: { showSolution: boolean }) 
     return (
       <div className="entry-translation">
         {wordTokens.map((token, index) => {
-          const entry = translationEntryForIndex(englishNormalizedTokens, index, meta?.sourceTokens ?? []);
+          const entry = translationEntryForIndex(
+            englishNormalizedTokens,
+            englishKeys,
+            index,
+            meta?.sourceTokens ?? []
+          );
           const englishKey = englishKeys[index] ?? "";
           const isHighlighted =
             !!entry &&
@@ -539,7 +583,7 @@ export default function HomeClient({ showSolution }: { showSolution: boolean }) 
     );
   }
 
-  function renderDictionaryEntry(entry: (typeof DICTIONARY)[number]) {
+  function renderDictionaryEntry(entry: DictionaryEntry) {
     const isSourceActive = activeSource === entry.source;
     const isEnglishActive = isSourceActive;
     const displaySource = script === "latin" ? transliterateCyrillicToLatin(entry.source) : entry.source;
